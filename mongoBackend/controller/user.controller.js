@@ -40,7 +40,7 @@ export const registeruser = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 
-  res.status(201).cookie("token", refreshToken, options).json({
+  res.status(201).cookie("token", token, options).json({
     _id: user._id,
     name: user.name,
     email: user.email,

@@ -1,0 +1,61 @@
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import ChatScreen from './screens/ChatScreen';
+import DailyReportScreen from './screens/DailyReportScreen';
+import LoginScreen from './screens/LoginScreen';
+
+const Stack = createStackNavigator();
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuthState();
+  }, []);
+
+  const checkAuthState = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      setIsAuthenticated(!!token);
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return null; // Add loading screen here
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        {!isAuthenticated ? (
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <>
+            <Stack.Screen 
+              name="Chat" 
+              component={ChatScreen}
+              options={{ title: 'Mental Health Support' }}
+            />
+            <Stack.Screen 
+              name="DailyReport" 
+              component={DailyReportScreen}
+              options={{ title: 'Daily Report' }}
+            />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
