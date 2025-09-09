@@ -102,7 +102,7 @@ export default function Signup() {
 
       if (response.ok) {
         Alert.alert("Success", "Account created successfully!");
-        router.push("../login"); // go to login page
+        router.push("../"); // go to login page
       } else {
         Alert.alert("Error", data.message || "Something went wrong.");
       }
@@ -169,7 +169,7 @@ export default function Signup() {
               {loading ? "Signing Up..." : "Sign Up"}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/index")}> 
+          <TouchableOpacity onPress={() => router.push("../")}> 
             <Text style={styles.signupText}>Already have an account? Login</Text>
           </TouchableOpacity>
         </KeyboardAvoidingView>

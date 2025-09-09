@@ -38,7 +38,7 @@ export default function Login() {
       Alert.alert("Success", "Logged in successfully!");
 
       // Navigate to dashboard or main app screen
-      router.push("/dashboard"); // Adjust path as needed
+      router.push("/home"); // Adjust path as needed
 
       console.log("User data:", data);
     } catch (error) {
