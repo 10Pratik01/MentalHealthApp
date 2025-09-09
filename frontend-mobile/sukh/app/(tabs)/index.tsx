@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import BottomNavBar from "../../components/BottomNavBar";
@@ -20,31 +21,36 @@ export default function Login() {
     }
 
     setLoading(true);
-
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post(`${API_BASE_URL}/login`, {
+        email,
+        password,
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 10000
       });
 
-      const data = await response.json();
+      if(response.status === 200) {
+        const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        // TODO: Store token securely (e.g., AsyncStorage or SecureStore)
+        // await AsyncStorage.setItem("token", data.token);
+
+        Alert.alert("Success", "Logged in successfully!");
+        router.push("/home"); 
+        console.log("User data:", data);
+      } else {
+        Alert.alert("Error", "Login failed. Please try again.");
       }
-
-      // TODO: Store token securely (AsyncStorage or SecureStore)
-      // await AsyncStorage.setItem("token", data.token);
-
-      Alert.alert("Success", "Logged in successfully!");
-
-      // Navigate to dashboard or main app screen
-      router.push("/dashboard"); // Adjust path as needed
-
-      console.log("User data:", data);
     } catch (error) {
-      const message = error?.message || "An unknown error occurred";
+      let message = "An unknown error occurred";
+      if(axios.isAxiosError(error)) {
+        message = error.response?.data?.message || error.message;
+      } else if(error instanceof Error) {
+        message = error.message;
+      }
       Alert.alert("Error", message);
       console.error("Login error:", message);
     } finally {
@@ -54,8 +60,8 @@ export default function Login() {
 
   return (
     <View style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={styles.container}
+      <KeyboardAvoidingView 
+        style={styles.container} 
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <Text style={styles.title}>Welcome to Sukh</Text>
