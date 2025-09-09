@@ -6,6 +6,11 @@ const dailyReportSchema = new mongoose.Schema({
     ref: 'User', 
     required: true 
   },
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
   type: { 
     type: String, 
     enum: ['start', 'end'], 
@@ -29,11 +34,12 @@ const dailyReportSchema = new mongoose.Schema({
     min: 0,
     max: 24,
     required: function() {
-      return this.type === 'start'; // Sleep hours for morning reports
+      return this.type === 'start';
     }
   },
   activities: {
     type: [String],
+    default: []
   },
   notes: {
     type: String,
