@@ -58,9 +58,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function Login() {
+export default function Signup() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
 
   return (
@@ -68,10 +71,17 @@ export default function Login() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.title}>Welcome to Sukh</Text>
+      <Text style={styles.title}>Create Account</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Enter name"
+        placeholderTextColor="#34d399"
+        value={name}
+        onChangeText={setName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter email"
         placeholderTextColor="#34d399"
         value={email}
         onChangeText={setEmail}
@@ -80,17 +90,32 @@ export default function Login() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Password"
+        placeholder="Enter phone number"
+        placeholderTextColor="#34d399"
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter date of birth (DD/MM/YYYY)"
+        placeholderTextColor="#34d399"
+        value={dob}
+        onChangeText={setDob}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter password"
         placeholderTextColor="#34d399"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       <TouchableOpacity style={styles.button} onPress={() => {}}>
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("../signup")}> 
-        <Text style={styles.signupText}>Create an account</Text>
+      <TouchableOpacity onPress={() => router.push("../index")}> 
+        <Text style={styles.signupText}>Already have an account? Login</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );

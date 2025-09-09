@@ -1,8 +1,8 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import { Router } from "express" 
+import { registeruser } from "../controller/user.controller.js"
 
-const router = express.Router();
+const userRouter = Router()
 
+userRouter.route('/register').post(registeruser)
 
+export {userRouter}
