@@ -196,3 +196,40 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     }
   });
 });
+
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error("Current password and new password are required");
+  }
+
+  const user = await User.findById(req.user.id).select('+password');
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Verify current password
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  
+  if (!isCurrentPasswordValid) {
+    res.status(400);
+    throw new Error("Current password is incorrect");
+  }
+
+  // Hash new password
+  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+  user.password = hashedNewPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password changed successfully"
+  });
+});
+
+
