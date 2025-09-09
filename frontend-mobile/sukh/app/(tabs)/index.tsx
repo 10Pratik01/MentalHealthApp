@@ -3,9 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useRouter } from "expo-router";
 import BottomNavBar from "../../components/BottomNavBar";
 
-const API_BASE_URL = Platform.OS === "android"
-  ? "http://10.0.2.2:5432/api/auth" // Android emulator
-  : "http://localhost:5432/api/auth"; // iOS simulator
+const API_BASE_URL = "http://10.0.13.68:5432/api/auth"; // iOS simulator
 
 export default function Login() {
   const [email, setEmail] = useState("");
