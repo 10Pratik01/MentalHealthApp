@@ -1,8 +1,13 @@
 // routes/activity.routes.js
 import express from "express";
+import { Router } from "express";
 import activitiesModel from "../models/activities.model.js";
+import { protect } from "../middleware/auth.js";
+import { addActivity } from "../controller/activity.controller.js";
 
-const activityRouter = express.Router();
+const activityRouter = Router();
+
+activityRouter.route("/add-Links").post(protect, addActivity)
 
 // POST /api/v1/activity/add-dummy
 activityRouter.post("/add-dummy", async (req, res) => {

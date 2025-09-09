@@ -17,11 +17,11 @@ const chatSchema = new mongoose.Schema(
       },
     ],
 
-    riskAssessment: {
-      phq9Score: Number,
-      gad7Score: Number,  
-      riskLevel: { type: String, enum: ["high", "mid", "low"] },
-    },
+    // riskAssessment: {
+    //   phq9Score: Number,
+    //   gad7Score: Number,  
+    //   riskLevel: { type: String, enum: ["high", "mid", "low"] },
+    // },
   },
   { timestamps: true }
 );
