@@ -6,8 +6,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Gemini configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-// Choose model
 const MODEL_NAME = "gemini-2.5-flash";
 
 // Crisis keywords for immediate detection (backup safety check)
@@ -33,21 +31,18 @@ export const createChatSession = asyncHandler(async (req, res) => {
     chat = await Chat.create({
       userId: req.user.id,
       messages: [],
-      riskAssessment: {
-        riskLevel: "low",
-      },
+      riskAssessment: { riskLevel: "low" },
     });
   }
 
-  // Add welcome message if no messages exist
+  // Add welcome message if empty
   if (chat.messages.length === 0) {
-    const welcomeMessage = {
+    chat.messages.push({
       sender: "bot",
       message:
         "Hello! I'm your mental health support assistant. How are you feeling today? I'm here to listen and help.",
       timestamp: new Date(),
-    };
-    chat.messages.push(welcomeMessage);
+    });
   }
 
   // Add initial user message if provided
@@ -121,7 +116,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     throw new Error("Chat session not found");
   }
 
-  // Add user message
   const userMessage = {
     sender: "user",
     message: message.trim(),
@@ -129,7 +123,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   };
   chat.messages.push(userMessage);
 
-  // Immediate crisis keyword check
+  // Crisis keyword detection
   const isCrisis = CRISIS_KEYWORDS.some((keyword) =>
     message.toLowerCase().includes(keyword)
   );
@@ -143,10 +137,9 @@ export const sendMessage = asyncHandler(async (req, res) => {
     };
     chat.messages.push(crisisResponse);
     chat.riskAssessment.riskLevel = "high";
-
     await User.findByIdAndUpdate(req.user.id, { riskLevel: "high" });
-    await chat.save();
 
+    await chat.save();
     return res.status(200).json({
       success: true,
       messages: [userMessage, crisisResponse],
@@ -155,7 +148,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     });
   }
 
-  // Get response from Gemini
   try {
     const botResponse = await getBotResponseFromGemini(
       message,
@@ -190,7 +182,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error("Gemini API Error:", error);
-
     const fallbackMessage = {
       sender: "bot",
       message:
@@ -204,7 +195,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
       success: false,
       message: "Error processing your message",
       messages: [userMessage, fallbackMessage],
-      error: "Gemini API unavailable",
     });
   }
 });
@@ -229,7 +219,6 @@ export const getChatHistory = asyncHandler(async (req, res) => {
   const totalMessages = chat.messages.length;
   const startIndex = Math.max(0, totalMessages - page * limit);
   const endIndex = totalMessages - (page - 1) * limit;
-
   const paginatedMessages = chat.messages.slice(startIndex, endIndex);
 
   res.status(200).json({
@@ -246,40 +235,7 @@ export const getChatHistory = asyncHandler(async (req, res) => {
   });
 });
 
-// Helper function for Gemini
-async function getBotResponseFromGemini(userMessage, chatHistory, currentRiskAssessment) {
-  try {
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
-
-    const formattedHistory = chatHistory.slice(-10).map((m) => ({
-      role: m.sender === "user" ? "user" : "model",
-      parts: [{ text: m.message }],
-    }));
-
-    formattedHistory.push({
-      role: "user",
-      parts: [{ text: userMessage }],
-    });
-
-    const result = await model.generateContent({
-      contents: formattedHistory,
-    });
-
-    const responseText = result.response.text();
-
-    return {
-      message: responseText,
-      riskAssessment: null,
-      confidence: null,
-      intent: null,
-    };
-  } catch (error) {
-    console.error("Gemini API Request Error:", error);
-    throw new Error(`Gemini API Error: ${error.message}`);
-  }
-}
-
-// @desc    Get all chats for a user
+// @desc    Get all chats for user
 // @route   GET /api/chat
 // @access  Private
 export const getUserChats = asyncHandler(async (req, res) => {
@@ -331,3 +287,35 @@ export const updateRiskAssessment = asyncHandler(async (req, res) => {
     riskAssessment: chat.riskAssessment,
   });
 });
+
+// ---------------------------
+// Gemini helper
+// ---------------------------
+async function getBotResponseFromGemini(userMessage, chatHistory, currentRiskAssessment) {
+  try {
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+
+    const formattedHistory = chatHistory.slice(-10).map((m) => ({
+      role: m.sender === "user" ? "user" : "model",
+      parts: [{ text: m.message }],
+    }));
+
+    formattedHistory.push({
+      role: "user",
+      parts: [{ text: userMessage }],
+    });
+
+    const result = await model.generateContent({ contents: formattedHistory });
+    const responseText = result.response.text();
+
+    return {
+      message: responseText,
+      riskAssessment: null,
+      confidence: null,
+      intent: null,
+    };
+  } catch (error) {
+    console.error("Gemini API Request Error:", error);
+    throw new Error(`Gemini API Error: ${error.message}`);
+  }
+}
