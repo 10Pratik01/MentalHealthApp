@@ -4,12 +4,15 @@ module.exports = {
     "./App.{js,jsx,ts,tsx}",
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
-    "./screens/**/*.{js,jsx,ts,tsx}",
-    // Add any other directories where you have components
   ],
-  presets: [require("nativewind/preset")],
+  presets: [require("nativewind/preset")], 
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: "#0B0C1E",
+        accent: "#2DD4BF",
+      },
+    },
   },
   plugins: [],
 };
