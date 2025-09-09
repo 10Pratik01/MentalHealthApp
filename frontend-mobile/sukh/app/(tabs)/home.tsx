@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import BottomNavBar from "../../components/BottomNavBar";
 import { SafeAreaView, View, Text, ScrollView, Pressable, Image, StatusBar } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 // NOTE: This screen uses NativeWind (Tailwind for RN). Ensure you've set up nativewind and the tailwind preset.
 // 1) npm i nativewind tailwindcss
@@ -128,6 +129,8 @@ const HomeScreen: React.FC = () => {
     [selectedMood]
   );
 
+  const router = useRouter();
+
   return (
     <SafeAreaView className="flex-1 bg-[#0b1116]">
       <StatusBar barStyle="light-content" />
@@ -165,6 +168,7 @@ const HomeScreen: React.FC = () => {
           cta="Open Chat"
           leftIcon={<Feather name="message-circle" size={28} color="#fff" />}
           bg="#1f2937"
+          onPress={() => router.push("/")} 
         />
 
         {/* 1 on 1 Sessions */}
@@ -175,16 +179,17 @@ const HomeScreen: React.FC = () => {
             cta="Book Now"
             leftIcon={<MaterialCommunityIcons name="account-heart" size={28} color="#fff" />}
             bg="#10b981"
+            onPress={() => router.push("/session")} 
           />
         </View>
 
         {/* Quick actions */}
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1">
-            <QuickAction label="Diary" icon={<Ionicons name="book" size={18} color="#fff" />} />
+            <QuickAction label="Diary" icon={<Ionicons name="book" size={18} color="#fff" />}  onPress={() => router.push("/")} />
           </View>
           <View className="flex-1">
-            <QuickAction label="Stories" icon={<Ionicons name="newspaper" size={18} color="#fff" />} />
+            <QuickAction label="Stories" icon={<Ionicons name="newspaper" size={18} color="#fff" onPress={() => router.push("/")}  />} />
           </View>
         </View>
 

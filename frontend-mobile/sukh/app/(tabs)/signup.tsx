@@ -13,11 +13,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
-const API_BASE_URL = Platform.OS === "android"
-  ? "http://10.0.2.2:5432/api/auth" // Android emulator
-  : "http://localhost:5432/api/auth"; // iOS simulator
-
-// Only base path, not including /register
+const API_BASE_URL = "http://10.0.13.68:5432/api/auth" 
+ // iOS simulator
 
 const styles = StyleSheet.create({
   container: {
@@ -95,8 +92,8 @@ export default function Signup() {
           name,
           email,
           password,
-          mobileNumber: phone || null,   // matches backend field
-          dateOfBirth: dob || null,      // must be YYYY-MM-DD
+          mobileNumber: phone || null,
+          dateOfBirth: dob || null, // must be YYYY-MM-DD
         }),
       });
 
@@ -105,8 +102,7 @@ export default function Signup() {
 
       if (response.ok) {
         Alert.alert("Success", "Account created successfully!");
-        // go to login page
-        router.push("../index");
+        router.push("../"); // go to login page
       } else {
         Alert.alert("Error", data.message || "Something went wrong.");
       }
@@ -151,7 +147,7 @@ export default function Signup() {
           />
           <TextInput
             style={styles.input}
-            placeholder="Date of Birth"
+            placeholder="Date of Birth (YYYY-MM-DD)"
             placeholderTextColor="#34d399"
             value={dob}
             onChangeText={setDob}
@@ -164,10 +160,16 @@ export default function Signup() {
             onChangeText={setPassword}
             secureTextEntry
           />
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
-            <Text style={styles.buttonText}>Sign Up</Text>
+          <TouchableOpacity 
+            style={[styles.button, loading && { opacity: 0.6 }]} 
+            onPress={handleSignup} 
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Signing Up..." : "Sign Up"}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("../index")}> 
+          <TouchableOpacity onPress={() => router.push("../")}> 
             <Text style={styles.signupText}>Already have an account? Login</Text>
           </TouchableOpacity>
         </KeyboardAvoidingView>

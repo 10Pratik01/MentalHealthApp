@@ -4,9 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useRouter } from "expo-router";
 import BottomNavBar from "../../components/BottomNavBar";
 
-const API_BASE_URL = Platform.OS === "android"
-  ? "http://10.0.2.2:5432/api/auth" // Android emulator
-  : "http://localhost:5432/api/auth"; // iOS simulator
+const API_BASE_URL = "http://10.0.13.68:5432/api/auth"; // iOS simulator
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -44,6 +42,16 @@ export default function Login() {
       } else {
         Alert.alert("Error", "Login failed. Please try again.");
       }
+
+      // TODO: Store token securely (AsyncStorage or SecureStore)
+      // await AsyncStorage.setItem("token", data.token);
+
+      Alert.alert("Success", "Logged in successfully!");
+
+      // Navigate to dashboard or main app screen
+      router.push("/home"); // Adjust path as needed
+
+      console.log("User data:", data);
     } catch (error) {
       let message = "An unknown error occurred";
       if(axios.isAxiosError(error)) {
