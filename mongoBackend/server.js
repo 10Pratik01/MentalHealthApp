@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import {userRouter} from './routes/user.route.js'
 import activityRouter from './routes/activity.route.js'
 import dailyRouter from './routes/daily.route.js';
+import chatRoutes from './routes/chat.route.js'
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,7 +26,7 @@ app.use('/api/status', (req, res) => {
 app.use('/api/auth',userRouter )
 app.use('/api/v1/activity', activityRouter)
 app.use("/api/v1/daily", dailyRouter)
-
+app.use('/api/chat', chatRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
