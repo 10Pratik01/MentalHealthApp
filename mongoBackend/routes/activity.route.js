@@ -2,10 +2,10 @@
 import express from "express";
 import activitiesModel from "../models/activities.model.js";
 
-const router = express.Router();
+const activityRouter = express.Router();
 
 // POST /api/v1/activity/add-dummy
-router.post("/add-dummy", async (req, res) => {
+activityRouter.post("/add-dummy", async (req, res) => {
   try {// pass any valid userId from DB
 
     const dummyActivities = [
@@ -39,4 +39,4 @@ router.post("/add-dummy", async (req, res) => {
   }
 });
 
-export default router;
+export default activityRouter;
