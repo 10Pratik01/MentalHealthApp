@@ -1,4 +1,4 @@
-
+import './globals.css'
 import { Stack } from "expo-router";
 import React from "react";
 

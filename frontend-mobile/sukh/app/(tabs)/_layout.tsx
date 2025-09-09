@@ -2,7 +2,7 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { ImageBackground, Image, Text, View, StyleSheet } from "react-native";
-
+import '../globals.css'
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 
