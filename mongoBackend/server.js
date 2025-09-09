@@ -1,6 +1,8 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import { connectDB } from './config/connectdb';
+import cors from 'cors'
+import cookieParser from 'cookie-parser';
+import connectDB from './config/connectdb.js';
+import dotenv from 'dotenv';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
