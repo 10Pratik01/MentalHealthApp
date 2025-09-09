@@ -1,9 +1,11 @@
-import { User } from "../models/user.model";
-import { asyncHandler } from "../uils/asyncHandler";
+import { User } from "../models/user.model.js";
+import { asyncHandler } from "../uils/asyncHandler.js";
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn: "7d",
   });
 };
 
@@ -26,8 +28,7 @@ export const registeruser = asyncHandler(async (req, res) => {
     password,
   });
 
-  const salt = await bcrypt.genSalt(process.env.SALT_ROUNDS);
-  user.password = bcrypt.hashSync(user.password, salt);
+  user.password = bcrypt.hashSync(user.password, 10);
 
   await user.save();
 
@@ -46,5 +47,10 @@ export const registeruser = asyncHandler(async (req, res) => {
     email: user.email,
   });
 });
+
+
+export const loginuser = asyncHandler(async(req, res) => {
+  
+})
 
 

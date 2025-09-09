@@ -6,8 +6,6 @@ import mongoose from 'mongoose';
 dotenv.config();
 const connectDB = async () => {
   try {
-    // Debug: Check if the URI is being loaded
-    console.log('MongoDB URI:', process.env.MONGODB_URI);
     
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI environment variable is not defined');

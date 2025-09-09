@@ -47,8 +47,4 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, {timestamps: true});
 
-// Add indexes for better performance
-userSchema.index({ email: 1 });
-userSchema.index({ riskLevel: 1 });
-
 export const User = mongoose.model('User', userSchema);
