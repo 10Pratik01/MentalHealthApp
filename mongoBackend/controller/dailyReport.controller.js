@@ -9,7 +9,7 @@ export const createDailyReport = asyncHandler(async (req, res) => {
   // Validate required fields based on type
   if (!type) {
     res.status(400);
-    throw new Error("Report type is required");
+    throw new Error("Report type is required")
   }
 
   if (type === 'start' && !sleepHours && sleepHours !== 0) {
