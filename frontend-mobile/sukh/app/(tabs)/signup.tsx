@@ -1,3 +1,4 @@
+import BottomNavBar from '../../components/BottomNavBar';
 
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
@@ -67,56 +68,61 @@ export default function Signup() {
   const [password, setPassword] = useState("");
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <Text style={styles.title}>Create Account</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter name"
-        placeholderTextColor="#34d399"
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter email"
-        placeholderTextColor="#34d399"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter phone number"
-        placeholderTextColor="#34d399"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter date of birth (DD/MM/YYYY)"
-        placeholderTextColor="#34d399"
-        value={dob}
-        onChangeText={setDob}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Enter password"
-        placeholderTextColor="#34d399"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.button} onPress={() => {}}>
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("../index")}> 
-        <Text style={styles.signupText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Text style={styles.title}>Create Account</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter name"
+            placeholderTextColor="#34d399"
+            value={name}
+            onChangeText={setName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#34d399"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            placeholderTextColor="#34d399"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Date of Birth"
+            placeholderTextColor="#34d399"
+            value={dob}
+            onChangeText={setDob}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#34d399"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("../index")}> 
+            <Text style={styles.signupText}>Already have an account? Login</Text>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </View>
+      <BottomNavBar />
+    </View>
   );
 }
