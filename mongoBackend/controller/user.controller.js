@@ -48,7 +48,7 @@ export const registeruser = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
 
-  res.status(201).cookie("token", token, options).json({
+  res.status(201).json({
     success: true,
     message: "User registered successfully",
     user: {
@@ -103,7 +103,7 @@ export const loginuser = asyncHandler(async (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
   };
 
   // Update last login (optional)
@@ -196,3 +196,40 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     }
   });
 });
+
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error("Current password and new password are required");
+  }
+
+  const user = await User.findById(req.user.id).select('+password');
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Verify current password
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  
+  if (!isCurrentPasswordValid) {
+    res.status(400);
+    throw new Error("Current password is incorrect");
+  }
+
+  // Hash new password
+  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+  user.password = hashedNewPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password changed successfully"
+  });
+});
+
+
