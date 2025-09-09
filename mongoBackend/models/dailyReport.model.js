@@ -54,7 +54,7 @@ const dailyReportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const DailyReport = mongoose.model(
-  "DailyReport",
+export const dailyReport = mongoose.model(
+  "dailyReport",
   dailyReportSchema
 );
