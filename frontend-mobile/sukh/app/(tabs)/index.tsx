@@ -1,19 +1,17 @@
-
 import React, { useState } from "react";
-import BottomNavBar from '../../components/BottomNavBar';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from "react-native";
 import { useRouter } from "expo-router";
+import BottomNavBar from "../../components/BottomNavBar";
 
-// Adjust this base URL depending on emulator/device
-const API_BASE_URL =
-  Platform.OS === "android"
-    ? "http://10.0.2.2:5432/api/auth" // Android Emulator
-    : "http://localhost:5432/api/auth"; // iOS Simulator
+const API_BASE_URL = Platform.OS === "android"
+  ? "http://10.0.2.2:5432/api/auth" // Android emulator
+  : "http://localhost:5432/api/auth"; // iOS simulator
 
-export default function Login({ navigation }) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -22,12 +20,11 @@ export default function Login({ navigation }) {
     }
 
     setLoading(true);
+
     try {
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -37,60 +34,68 @@ export default function Login({ navigation }) {
         throw new Error(data.message || "Login failed");
       }
 
-      // ✅ Store token locally (AsyncStorage or SecureStore)
-      // import AsyncStorage from "@react-native-async-storage/async-storage";
+      // TODO: Store token securely (AsyncStorage or SecureStore)
       // await AsyncStorage.setItem("token", data.token);
 
       Alert.alert("Success", "Logged in successfully!");
 
-      // Navigate to Dashboard or Home screen
-      // navigation.navigate("Home");
+      // Navigate to dashboard or main app screen
+      router.push("/dashboard"); // Adjust path as needed
 
       console.log("User data:", data);
     } catch (error) {
-      console.error("Login error:", error.message);
-      Alert.alert("Error", error.message);
+      const message = error?.message || "An unknown error occurred";
+      Alert.alert("Error", message);
+      console.error("Login error:", message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <Text style={styles.title}>Welcome to Sukh</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#34d399"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#34d399"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
+    <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text style={styles.buttonText}>
-          {loading ? "Logging in..." : "Login"}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-        <Text style={styles.signupText}>Create an account</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+        <Text style={styles.title}>Welcome to Sukh</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#34d399"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#34d399"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <TouchableOpacity 
+          style={[styles.button, loading && { opacity: 0.6 }]} 
+          onPress={handleLogin} 
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Logging in..." : "Login"}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/signup")}>
+          <Text style={styles.signupText}>Create an account</Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+
+      <BottomNavBar />
+    </View>
   );
 }
 
@@ -115,7 +120,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 10,
     paddingHorizontal: 16,
-    marginBottom: 20, 
+    marginBottom: 20,
     backgroundColor: "#fff",
     color: "#059669",
     fontSize: 16,
@@ -145,46 +150,3 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
-
-export default function Login() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <Text style={styles.title}>Welcome to Sukh</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#34d399"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#34d399"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <TouchableOpacity style={styles.button} onPress={() => {}}>
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("../signup")}> 
-            <Text style={styles.signupText}>Create an account</Text>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </View>
-      <BottomNavBar />
-    </View>
-  );
-}

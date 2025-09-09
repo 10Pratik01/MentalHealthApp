@@ -13,7 +13,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 
-const API_BASE_URL = "http://10.0.2.2:5432/api/auth"; 
+const API_BASE_URL = Platform.OS === "android"
+  ? "http://10.0.2.2:5432/api/auth" // Android emulator
+  : "http://localhost:5432/api/auth"; // iOS simulator
+
 // Only base path, not including /register
 
 const styles = StyleSheet.create({
