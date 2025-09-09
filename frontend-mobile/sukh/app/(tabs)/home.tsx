@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import BottomNavBar from "../../components/BottomNavBar";
 import { SafeAreaView, View, Text, ScrollView, Pressable, Image, StatusBar } from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
@@ -103,30 +104,6 @@ const QuoteCard = () => (
   </View>
 );
 
-const BottomTab = () => (
-  <View className="flex-row items-center justify-between px-6 py-3 bg-[#0b1116] border-t border-white/5 rounded-t-3xl">
-    <View className="items-center">
-      <Ionicons name="home" size={22} color="white" />
-      <Text className="text-[10px] text-white mt-1">Home</Text>
-    </View>
-    <View className="items-center">
-      <Ionicons name="chatbubble-ellipses" size={22} color="white" />
-      <Text className="text-[10px] text-white mt-1">Chat</Text>
-    </View>
-    <View className="items-center">
-      <MaterialCommunityIcons name="calendar-clock" size={22} color="white" />
-      <Text className="text-[10px] text-white mt-1">Sessions</Text>
-    </View>
-    <View className="items-center">
-      <Ionicons name="people" size={22} color="white" />
-      <Text className="text-[10px] text-white mt-1">Community</Text>
-    </View>
-    <View className="items-center">
-      <Ionicons name="person" size={22} color="white" />
-      <Text className="text-[10px] text-white mt-1">Profile</Text>
-    </View>
-  </View>
-);
 
 const HomeScreen: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
@@ -227,10 +204,7 @@ const HomeScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Bottom Tab (static preview) */}
-      <View className="absolute left-0 right-0 bottom-0">
-        <BottomTab />
-      </View>
+      <BottomNavBar />
     </SafeAreaView>
   );
 };

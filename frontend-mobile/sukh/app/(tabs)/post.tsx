@@ -56,13 +56,6 @@ export default function PostScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        <Ionicons name="home-outline" size={28} color="#999" />
-        <Ionicons name="videocam-outline" size={28} color="#999" />
-        <Ionicons name="chatbubble-outline" size={28} color="#999" />
-        <Ionicons name="people" size={28} color="#10B981" /> {/* active */}
-      </View>
     </View>
   );
 }

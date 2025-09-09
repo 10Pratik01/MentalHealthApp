@@ -1,15 +1,8 @@
 
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from "react-native";
+import BottomNavBar from '../../components/BottomNavBar';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { useRouter } from "expo-router";
 
 // Adjust this base URL depending on emulator/device
 const API_BASE_URL =
@@ -152,3 +145,46 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+
+export default function Login() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Text style={styles.title}>Welcome to Sukh</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#34d399"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#34d399"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TouchableOpacity style={styles.button} onPress={() => {}}>
+            <Text style={styles.buttonText}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("../signup")}> 
+            <Text style={styles.signupText}>Create an account</Text>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
+      </View>
+      <BottomNavBar />
+    </View>
+  );
+}
