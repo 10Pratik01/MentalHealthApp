@@ -49,9 +49,7 @@ export default function Login() {
       Alert.alert("Success", "Logged in successfully!");
 
       // Navigate to dashboard or main app screen
-      router.push("/home"); // Adjust path as needed
-
-      console.log("User data:", data);
+      router.push("/home"); 
     } catch (error) {
       let message = "An unknown error occurred";
       if(axios.isAxiosError(error)) {
