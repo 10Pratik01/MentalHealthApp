@@ -1,9 +1,65 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
 
-export default function Login() {
+// Adjust this base URL depending on emulator/device
+const API_BASE_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:5432/api/auth" // Android Emulator
+    : "http://localhost:5432/api/auth"; // iOS Simulator
+
+export default function Login({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // ✅ Store token locally (AsyncStorage or SecureStore)
+      // import AsyncStorage from "@react-native-async-storage/async-storage";
+      // await AsyncStorage.setItem("token", data.token);
+
+      Alert.alert("Success", "Logged in successfully!");
+
+      // Navigate to Dashboard or Home screen
+      // navigation.navigate("Home");
+
+      console.log("User data:", data);
+    } catch (error) {
+      console.error("Login error:", error.message);
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -28,10 +84,16 @@ export default function Login() {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={() => {}}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Logging in..." : "Login"}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => {}}>
+      <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
         <Text style={styles.signupText}>Create an account</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>

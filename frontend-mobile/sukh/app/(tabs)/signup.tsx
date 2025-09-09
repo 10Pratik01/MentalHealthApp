@@ -1,10 +1,18 @@
-
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  KeyboardAvoidingView, 
+  Platform, 
+  Alert 
+} from "react-native";
 import { useRouter } from "expo-router";
 
-
-
+const API_BASE_URL = "http://10.0.2.2:5432/api/auth"; 
+// Only base path, not including /register
 
 const styles = StyleSheet.create({
   container: {
@@ -65,6 +73,44 @@ export default function Signup() {
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!name || !email || !password) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          mobileNumber: phone || null,   // matches backend field
+          dateOfBirth: dob || null,      // must be YYYY-MM-DD
+        }),
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (response.ok) {
+        Alert.alert("Success", "Account created successfully!");
+        // go to login page
+        router.push("../index");
+      } else {
+        Alert.alert("Error", data.message || "Something went wrong.");
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error("Signup Error:", error);
+      Alert.alert("Error", "Unable to connect to server.");
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -72,6 +118,7 @@ export default function Signup() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <Text style={styles.title}>Create Account</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Enter name"
@@ -98,7 +145,7 @@ export default function Signup() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Enter date of birth (DD/MM/YYYY)"
+        placeholder="Enter date of birth (YYYY-MM-DD)"
         placeholderTextColor="#34d399"
         value={dob}
         onChangeText={setDob}
@@ -111,10 +158,14 @@ export default function Signup() {
         onChangeText={setPassword}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.button} onPress={() => {}}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
+        <Text style={styles.buttonText}>
+          {loading ? "Signing Up..." : "Sign Up"}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("../index")}> 
+
+      <TouchableOpacity onPress={() => router.push("../index")}>
         <Text style={styles.signupText}>Already have an account? Login</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
