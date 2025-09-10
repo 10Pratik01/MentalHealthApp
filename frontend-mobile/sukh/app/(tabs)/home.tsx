@@ -168,7 +168,7 @@ const HomeScreen: React.FC = () => {
           cta="Open Chat"
           leftIcon={<Feather name="message-circle" size={28} color="#fff" />}
           bg="#1f2937"
-          onPress={() => router.push("/")} 
+          onPress={() => router.push("/chat")} 
         />
 
         {/* 1 on 1 Sessions */}
@@ -189,7 +189,7 @@ const HomeScreen: React.FC = () => {
             <QuickAction label="Diary" icon={<Ionicons name="book" size={18} color="#fff" />}  onPress={() => router.push("/")} />
           </View>
           <View className="flex-1">
-            <QuickAction label="Stories" icon={<Ionicons name="newspaper" size={18} color="#fff" onPress={() => router.push("/")}  />} />
+            <QuickAction label="Stories" icon={<Ionicons name="newspaper" size={18} color="#fff" onPress={() => router.push("/motivationalcontent")}  />} />
           </View>
         </View>
 
