@@ -4,7 +4,7 @@
     "slug": "first",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.jrpg",
+    "icon": "./assets/images/logo.jpg",
     "scheme": "movies",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
