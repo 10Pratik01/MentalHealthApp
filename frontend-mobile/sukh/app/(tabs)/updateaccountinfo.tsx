@@ -1,35 +1,97 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import api from "../../services/api";
 
 const EditProfilePage: React.FC = () => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [gender, setGender] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleUpdateProfile = () => {
-    if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim() || !gender || !dateOfBirth) {
-      Alert.alert('Error', 'Please fill in all fields');
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          router.replace("/login");
+          return;
+        }
+
+        const res = await api.get("/auth/getUser", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const user = res.data.user;
+        if (user.name) {
+          const nameParts = user.name.split(" ");
+          setFirstName(nameParts[0] || "");
+          setLastName(nameParts.slice(1).join(" ") || "");
+        }
+        setPhoneNumber(user.mobileNumber || "");
+      } catch (err) {
+        console.log(err);
+        Alert.alert("Error", "Failed to fetch profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleUpdateProfile = async () => {
+    if (!firstName.trim() || !lastName.trim() || !phoneNumber.trim()) {
+      Alert.alert("Error", "Please fill in all fields");
       return;
     }
-    
-    // Handle profile update logic here
-    console.log('Profile updated:', {
-      firstName,
-      lastName,
-      phoneNumber,
-      gender,
-      dateOfBirth
-    });
-    
-    Alert.alert('Success', 'Profile updated successfully!');
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+
+      const res = await api.put(
+        "/auth/updateprofile",
+        {
+          name: `${firstName.trim()} ${lastName.trim()}`,
+          mobileNumber: phoneNumber,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Alert.alert("Success", res.data.message);
+      router.back(); // Navigate back after update
+    } catch (err: any) {
+      console.log(err);
+      Alert.alert("Error", err.response?.data?.message || "Update failed");
+    }
   };
 
   const handleBack = () => {
-    // Handle back navigation
-    console.log('Navigate back');
+    router.back();
   };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-gray-50">
+        <ActivityIndicator size="large" color="#00C897" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -43,18 +105,16 @@ const EditProfilePage: React.FC = () => {
       </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Profile Picture Section */}
+        {/* Profile Picture */}
         <View className="items-center py-8">
           <View className="w-24 h-24 rounded-full bg-gray-300 items-center justify-center mb-3">
             <Text className="text-4xl">👤</Text>
           </View>
-          <Text className="text-xl font-bold text-gray-800">Haruuchan</Text>
-          <Text className="text-sm text-gray-500">haruchan</Text>
+          <Text className="text-xl font-bold text-gray-800">{`${firstName} ${lastName}`}</Text>
         </View>
 
         {/* Form Fields */}
         <View className="px-4 space-y-4">
-          {/* First Name */}
           <View className="bg-white rounded-xl p-4 shadow-sm">
             <TextInput
               className="text-base text-gray-800"
@@ -65,7 +125,6 @@ const EditProfilePage: React.FC = () => {
             />
           </View>
 
-          {/* Last Name */}
           <View className="bg-white rounded-xl p-4 shadow-sm">
             <TextInput
               className="text-base text-gray-800"
@@ -76,11 +135,7 @@ const EditProfilePage: React.FC = () => {
             />
           </View>
 
-          {/* Phone Number */}
           <View className="bg-white rounded-xl p-4 shadow-sm flex-row items-center">
-            <View className="w-6 h-4 mr-3 items-center justify-center">
-              <Text className="text-sm">🇮��</Text>
-            </View>
             <TextInput
               className="flex-1 text-base text-gray-800"
               placeholder="Phone number"
@@ -90,25 +145,9 @@ const EditProfilePage: React.FC = () => {
               keyboardType="phone-pad"
             />
           </View>
-
-          {/* Gender Dropdown */}
-          <TouchableOpacity className="bg-white rounded-xl p-4 shadow-sm flex-row items-center justify-between">
-            <Text className={`text-base ${gender ? 'text-gray-800' : 'text-gray-400'}`}>
-              {gender || 'Select your gender'}
-            </Text>
-            <Text className="text-gray-400 text-lg">▼</Text>
-          </TouchableOpacity>
-
-          {/* Date of Birth */}
-          <TouchableOpacity className="bg-white rounded-xl p-4 shadow-sm flex-row items-center justify-between">
-            <Text className={`text-base ${dateOfBirth ? 'text-gray-800' : 'text-gray-400'}`}>
-              {dateOfBirth || 'What is your date of birth?'}
-            </Text>
-            <Text className="text-gray-400 text-lg">📅</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* Update Profile Button */}
+        {/* Update Button */}
         <View className="px-4 py-8">
           <TouchableOpacity
             className="bg-teal-500 rounded-xl py-4 items-center shadow-lg"
