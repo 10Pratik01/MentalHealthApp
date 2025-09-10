@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PHQ-9 Chatbot</title>
+</head>
+<body>
+  <h1>PHQ-9 Mental Health Checker</h1>
+  <form method="POST">
+    <p>Answer the 9 questions below (free text):</p>
+    {% for q in questions %}
+      <label for="q{{ loop.index }}">Q{{ loop.index }}. {{ q }}</label><br>
+      <input type="text" id="q{{ loop.index }}" name="q{{ loop.index }}" style="width: 100%;" required><br><br>
+    {% endfor %}
+    <input type="submit" value="Submit">
+  </form>
+
+  {% if result %}
+    <h2>Results:</h2>
+    {% if result.error %}
+      <p style="color:red;">Error: {{ result.error }}</p>
+    {% else %}
+      <p><b>Predicted depression level:</b> {{ result.label }} (class index {{ result.label_idx }})</p>
+      <h3>Top Predictions:</h3>
+      <ul>
+        {% for idx, prob, name in result.topk %}
+          <li>{{ name }} — prob={{ "%.4f"|format(prob) }}</li>
+        {% endfor %}
+      </ul>
+      {% if result.q9_suicidal_flag %}
+        <p style="color:red;">
+          ⚠️ Q9 suggests possible suicidal thoughts. Please seek immediate help or call a helpline.
+        </p>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</body>
+</html>
