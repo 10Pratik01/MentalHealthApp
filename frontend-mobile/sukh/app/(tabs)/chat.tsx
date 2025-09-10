@@ -65,22 +65,22 @@ const ChatbotPage: React.FC = () => {
 
   // Send message to backend
   const sendMessageToBackend = async (text: string) => {
-  if (!chatId) return;
-  const token = await getToken();
-  if (!token) return;
+    if (!chatId) return;
+    const token = await getToken();
+    if (!token) return;
 
-  try {
-    const response = await axios.post(
-      `${API_URL}/${chatId}/message`,
-      { message: text },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    const newMessages = response.data.messages;
-    setMessages(newMessages); // ✅ replace messages with backend's response
-  } catch (error) {
-    console.error("Failed to send message:", error);
-  }
-};
+    try {
+      const response = await axios.post(
+        `${API_URL}/${chatId}/message`,
+        { message: text },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const newMessages = response.data.messages;
+      setMessages(newMessages); // ✅ replace messages with backend's response
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
+  };
 
   // Add user message locally before sending
   const addUserMessage = (text: string) => {
@@ -182,6 +182,16 @@ const ChatbotPage: React.FC = () => {
           }`}
         >
           <Text className="text-white text-lg">✈</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ✅ Bottom bar with Home button */}
+      <View className="flex-row justify-center items-center px-4 py-3 border-t border-gray-700 bg-gray-900">
+        <TouchableOpacity
+          onPress={() => router.push("/home")}
+          className="bg-green-500 px-6 py-3 rounded-full"
+        >
+          <Text className="text-white font-semibold text-lg">🏠 Go Home</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

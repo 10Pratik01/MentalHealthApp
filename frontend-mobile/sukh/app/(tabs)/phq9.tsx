@@ -12,9 +12,12 @@ import {
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 const FLASK_API_URL = "http://10.0.54.238:8000/api/predict"; // Flask API endpoint
 const EXPRESS_API_URL = "http://10.0.13.68:5432/api/auth"; // Express backend (adjust port)
+
+
 
 const PHQ9_QUESTIONS = [ "Little interest or pleasure in doing things? Please answer roughly: rare / a few days / most days / nearly every day (or reply in your own words).",
 
@@ -28,6 +31,8 @@ const PHQ9_QUESTIONS = [ "Little interest or pleasure in doing things? Please an
   "Thoughts that you would be better off dead, or thoughts of hurting yourself in some way?",
 
 ];
+
+const router = useRouter();
 
 const App = () => {
   const [answers, setAnswers] = useState<string[]>(Array(PHQ9_QUESTIONS.length).fill(""));
@@ -73,10 +78,7 @@ const App = () => {
   };
 
   const handleSubmit = async () => {
-    console.log("🚀 Submitting PHQ-9 answers...");
-    console.log("📝 Current answers:", answers);
-    console.log("👤 User ID:", userId);
-    console.log("🔑 Token:", token);
+    
 
     if (!userId || !token) {
       Alert.alert("Error", "User not authenticated. Please log in again.");
@@ -115,6 +117,7 @@ const App = () => {
         console.log("✅ Express API response:", expressResponse.data);
 
         Alert.alert("Success", "Risk level updated in your profile.");
+        router.push('/home')
       } else {
         console.warn("⚠️ Flask returned error:", response.data.error);
         Alert.alert("Error", response.data.error || "Unknown error occurred.");
