@@ -8,7 +8,8 @@ import activityRouter from './routes/activity.route.js'
 import dailyRouter from './routes/daily.route.js';
 import chatRoutes from './routes/chat.route.js'
 import communityRouter from './routes/community.routes.js'
-import scheduleRouter from './models/schedule.model.js';
+import { scheduleRouter } from './routes/schedule.routes.js';
+
 
 dotenv.config();
 

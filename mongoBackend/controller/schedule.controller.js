@@ -1,4 +1,4 @@
-import Schedule from "../models/schedule.model.js";
+import {Schedule} from "../models/schedule.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // ✅ Create Appointment

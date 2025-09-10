@@ -1,9 +1,9 @@
-import express from "express";
+import express, { Router } from "express";
 
 import { protect } from "../middleware/auth.js"; // JWT auth middleware
 import { createAppointment, deleteAppointment, getAppointments } from "../controller/schedule.controller.js";
 
-const scheduleRouter = express.Router();
+const scheduleRouter = Router();
 
 // All routes require authentication
 scheduleRouter.use(protect);
@@ -15,4 +15,4 @@ scheduleRouter.delete("/:id", deleteAppointment); // Delete specific appointment
 // Optional admin route
 // router.get("/all", getAllAppointments);
 
-export default scheduleRouter;
+export {scheduleRouter};

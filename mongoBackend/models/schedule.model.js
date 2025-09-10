@@ -12,8 +12,5 @@ const scheduleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Optional: prevent duplicate slot for same user
-scheduleSchema.index({ user: 1, date: 1, time: 1 }, { unique: true });
+export const Schedule = mongoose.model("Schedule", scheduleSchema);
 
-const Schedule = mongoose.model("Schedule", scheduleSchema);
-export default Schedule;
