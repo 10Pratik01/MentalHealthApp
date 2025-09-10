@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { VideoCard } from '../../components/VideoCard';
 import { MusicCard } from '../../components/MusicCard';
+import { router } from 'expo-router';
 
 interface VideoData {
   id: string;
@@ -95,7 +96,7 @@ const MotivationalContentPage: React.FC = () => {
       
       {/* Header */}
       <View className="flex-row justify-between items-center px-4 py-3">
-        <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-700 items-center justify-center">
+        <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-700 items-center justify-center" onPress={()=>router.push('/home')}>
           <Image
             source={{ uri: 'https://example.com/profile.jpg' }}
             className="w-10 h-10 rounded-full"

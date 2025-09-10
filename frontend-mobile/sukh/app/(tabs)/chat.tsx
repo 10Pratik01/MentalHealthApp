@@ -1,215 +1,189 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   TextInput,
-  ScrollView,
+  TouchableOpacity,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   Image,
+  ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Message {
-  id: string;
-  text: string;
-  isBot: boolean;
-  timestamp: Date;
+  _id?: string;
+  sender: "user" | "bot";
+  message: string;
+  timestamp: string;
 }
 
-interface Question {
-  id: number;
-  text: string;
-}
-
-const QUESTIONS: Question[] = [
-  { id: 1, text: "Little interest or pleasure in doing things?" },
-  { id: 2, text: "Feeling down, depressed, or hopeless?" },
-  { id: 3, text: "Trouble falling or staying asleep, or sleeping too much?" },
-  { id: 4, text: "Feeling tired or having little energy?" },
-  { id: 5, text: "Poor appetite or overeating?" },
-  { id: 6, text: "Feeling bad about yourself — or that you are a failure or have let yourself or your family down?" },
-  { id: 7, text: "Trouble concentrating on things, such as reading the newspaper or watching television?" },
-  { id: 8, text: "Moving or speaking so slowly that other people could have noticed? Or the opposite — being so fidgety or restless?" },
-  { id: 9, text: "Thoughts that you would be better off dead, or thoughts of hurting yourself in some way?" },
-];
-
-const API_URL = "http://10.0.54.238:8000/api/phq9-results";
-
+const API_URL = "http://10.0.13.68:5432/api/chat"; // your backend
 const ChatbotPage: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [assessmentComplete, setAssessmentComplete] = useState(false);
-  const [userResponses, setUserResponses] = useState<Record<number, string>>({});
-  const [backendResult, setBackendResult] = useState<string | null>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+  const router = useRouter();
 
-  useEffect(() => {
-    if (messages.length === 0) {
-      addBotMessage(QUESTIONS[0].text);
+  // Retrieve token from AsyncStorage
+  const getToken = async () => {
+    try {
+      return await AsyncStorage.getItem("token");
+    } catch (e) {
+      console.error("Error retrieving token:", e);
+      return null;
     }
-  }, []);
-
-  const addBotMessage = (text: string) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text, isBot: true, timestamp: new Date() },
-    ]);
   };
 
+  // Initialize or retrieve chat session
+  const initializeChat = async () => {
+    const token = await getToken();
+    if (!token) {
+      console.error("Token not found");
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `${API_URL}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const chat = response.data.chat;
+      setChatId(chat._id);
+      setMessages(chat.messages || []);
+    } catch (error) {
+      console.error("Failed to initialize chat:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Send message to backend
+  const sendMessageToBackend = async (text: string) => {
+  if (!chatId) return;
+  const token = await getToken();
+  if (!token) return;
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/${chatId}/message`,
+      { message: text },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const newMessages = response.data.messages;
+    setMessages(newMessages); // ✅ replace messages with backend's response
+  } catch (error) {
+    console.error("Failed to send message:", error);
+  }
+};
+
+  // Add user message locally before sending
   const addUserMessage = (text: string) => {
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), text, isBot: false, timestamp: new Date() },
-    ]);
+    const message: Message = {
+      sender: "user",
+      message: text,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, message]);
   };
 
-  const simulateTyping = (callback: () => void) => {
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      callback();
-    }, 1200);
-  };
-
+  // Handle sending a message
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
-    addUserMessage(inputText);
-
-    // Save response for current question
-    setUserResponses((prev) => ({
-      ...prev,
-      [QUESTIONS[currentQuestionIndex].id]: inputText.trim(),
-    }));
-
+    const message = inputText.trim();
+    addUserMessage(message);
+    sendMessageToBackend(message);
     setInputText("");
-    goToNextQuestion();
   };
 
-  const goToNextQuestion = () => {
-    const nextIndex = currentQuestionIndex + 1;
-    if (nextIndex < QUESTIONS.length) {
-      setCurrentQuestionIndex(nextIndex);
-      simulateTyping(() => addBotMessage(QUESTIONS[nextIndex].text));
-    } else {
-      setAssessmentComplete(true);
-      simulateTyping(() => sendAssessmentResults());
-    }
-  };
+  useEffect(() => {
+    initializeChat();
+  }, []);
 
-  const sendAssessmentResults = async () => {
-    try {
-      const payload = {
-        userId: "unique-user-id",  // replace with actual if available
-        responses: userResponses,
-      };
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
 
-      const response = await axios.post(API_URL, payload);
-
-      if (response.status === 200 && response.data) {
-        // Assuming backend returns an object with result message or analysis
-        const { predictedLevel, topPredictions } = response.data;
-
-        let resultText = `Predicted depression level: ${predictedLevel}\nTop Predictions:\n`;
-        topPredictions.forEach(
-          (pred: { label: string; prob: number }) =>
-            (resultText += `${pred.label} — prob=${pred.prob.toFixed(4)}\n`)
-        );
-
-        addBotMessage(resultText);
-        setBackendResult(resultText);
-      } else {
-        addBotMessage("Sorry, something went wrong processing your results.");
-      }
-    } catch (error) {
-      console.error("Error sending PHQ9 results:", error);
-      addBotMessage("Error connecting to the server. Please try again later.");
-    }
-  };
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 justify-center items-center bg-gray-900">
+        <ActivityIndicator size="large" color="#34D399" />
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#121212" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#121212" />
-      
-      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: "#444" }}>
-        <Image source={{ uri: "https://example.com/user-avatar.jpg" }} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }} />
-        <View>
-          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 16 }}>Mental Health Bot</Text>
-          <Text style={{ color: "#aaa", fontSize: 12 }}>Online</Text>
+    <SafeAreaView className="flex-1 bg-gray-900">
+      <StatusBar barStyle="light-content" backgroundColor="#111827" />
+
+      {/* Header */}
+      <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-700">
+        <View className="flex-row items-center">
+          <Image
+            source={{ uri: "https://i.pravatar.cc/150?img=3" }}
+            className="w-10 h-10 rounded-full mr-3"
+          />
+          <View>
+            <Text className="text-white text-lg font-semibold">Mental Health Bot</Text>
+            <Text className="text-gray-400 text-sm">Online</Text>
+          </View>
         </View>
+        <TouchableOpacity>
+          <Text className="text-white text-xl">🔔</Text>
+        </TouchableOpacity>
       </View>
-      
+
+      {/* Chat Messages */}
       <ScrollView
         ref={scrollViewRef}
-        style={{ flex: 1, padding: 16 }}
+        className="flex-1 px-4 py-4"
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
-        {messages.map((m) => (
-          <View key={m.id} style={{
-            flexDirection: "row", 
-            marginBottom: 16, 
-            justifyContent: m.isBot ? "flex-start" : "flex-end"
-          }}>
-            {m.isBot && <Text style={{ fontSize: 24, marginRight: 8 }}>🤖</Text>}
-            <View style={{
-              maxWidth: "75%",
-              padding: 12,
-              borderRadius: 16,
-              backgroundColor: m.isBot ? "#E5E5E5" : "#4CAF50",
-              borderBottomLeftRadius: m.isBot ? 0 : 16,
-              borderBottomRightRadius: m.isBot ? 16 : 0,
-            }}>
-              <Text style={{ color: m.isBot ? "#111" : "#fff" }}>{m.text}</Text>
+        {messages.map((msg, index) => (
+          <View
+            key={msg._id || index}
+            className={`flex-row mb-4 ${msg.sender === "bot" ? "justify-start" : "justify-end"}`}
+          >
+            {msg.sender === "bot" && <Text className="text-2xl mr-2">🤖</Text>}
+            <View
+              className={`max-w-xs px-4 py-3 rounded-2xl ${
+                msg.sender === "bot" ? "bg-gray-200 rounded-bl-md" : "bg-green-500 rounded-br-md"
+              }`}
+            >
+              <Text className={`text-sm ${msg.sender === "bot" ? "text-gray-800" : "text-white"}`}>
+                {msg.message}
+              </Text>
             </View>
-            {!m.isBot && <Text style={{ fontSize: 24, marginLeft: 8 }}>🙂</Text>}
+            {msg.sender !== "bot" && <Text className="text-2xl ml-2">🙂</Text>}
           </View>
         ))}
-
-        {isTyping && (
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
-            <Text style={{ fontSize: 24, marginRight: 8 }}>🤖</Text>
-            <View style={{ backgroundColor: "#E5E5E5", padding: 12, borderRadius: 16 }}>
-              <Text style={{ color: "#666" }}>Typing...</Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
 
-      {!assessmentComplete && (
-        <View style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: 1, borderTopColor: "#444" }}>
-          <TextInput
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Type your message"
-            placeholderTextColor="#999"
-            style={{
-              flex: 1,
-              backgroundColor: "#333",
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              color: "#fff",
-              fontSize: 16,
-              maxHeight: 100,
-            }}
-            multiline
-          />
-          <TouchableOpacity
-            onPress={handleSendMessage}
-            disabled={!inputText.trim()}
-            style={{
-              marginLeft: 12,
-              backgroundColor: inputText.trim() ? "#4CAF50" : "#666",
-              borderRadius: 20,
-              padding: 12,
-            }}
-          >
-            <Text style={{ color: "#fff", fontSize: 18 }}>✈</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Input Area */}
+      <View className="flex-row items-center px-4 py-3 border-t border-gray-700 bg-gray-800">
+        <TextInput
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder="Type your message..."
+          placeholderTextColor="#9CA3AF"
+          className="flex-1 bg-gray-700 text-white px-4 py-3 rounded-full mr-3"
+          multiline
+        />
+        <TouchableOpacity
+          onPress={handleSendMessage}
+          disabled={!inputText.trim()}
+          className={`w-12 h-12 rounded-full items-center justify-center ${
+            inputText.trim() ? "bg-green-500" : "bg-gray-600"
+          }`}
+        >
+          <Text className="text-white text-lg">✈</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };

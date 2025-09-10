@@ -12,37 +12,46 @@
     const router = useRouter();
 
     const handleLogin = async () => {
-      if (!email || !password) {
-        Alert.alert("Error", "Please enter both email and password");
-        return;
-      }
+  if (!email || !password) {
+    Alert.alert("Error", "Please enter both email and password");
+    return;
+  }
 
-      setLoading(true);
-      try {
-        const response = await api.post("/auth/login", {
-          email,
-          password,
-        });
+  setLoading(true);
+  try {
+    const response = await api.post("/auth/login", {
+      email,
+      password,
+    });
 
-        const data = response.data;
+    const data = response.data;
 
-        // Store token securely
-        await AsyncStorage.setItem("token", data.token);
+    // Store token and userId securely
+    await AsyncStorage.setItem("token", data.token);
+    await AsyncStorage.setItem("userId", data.user._id);
 
-        Alert.alert("Success", "Logged in successfully!");
-        router.push("/home");
-      } catch (error: any) {
-        let message = "An unknown error occurred";
-        if (error.response?.data?.message) {
-          message = error.response.data.message;
-        } else if (error.message) {
-          message = error.message;
-        }
-        Alert.alert("Error", message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    console.log("Saved auth:", { token: data.token, userId: data.user._id });
+    console.log("Login Response:", data);
+console.log("Token:", data.token);
+console.log("UserId:", data.user._id);
+
+    Alert.alert("Success", "Logged in successfully!");
+    router.push("/home");
+  } catch (error: any) {
+    let message = "An unknown error occurred";
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.message) {
+      message = error.message;
+    }
+    
+    Alert.alert("Error", message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
     return (
       <View style={{ flex: 1 }}>
