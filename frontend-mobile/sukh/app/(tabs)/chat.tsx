@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import axios from "axios";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Message {
   _id?: string;
@@ -31,18 +31,18 @@ const ChatbotPage: React.FC = () => {
   const router = useRouter();
 
   // Retrieve token from AsyncStorage
-//   const getToken = async () => {
-//     try {
-//       return await AsyncStorage.getItem("token");
-//     } catch (e) {
-//       console.error("Error retrieving token:", e);
-//       return null;
-//     }
-//   };
+  const getToken = async () => {
+    try {
+      return await AsyncStorage.getItem("token");
+    } catch (e) {
+      console.error("Error retrieving token:", e);
+      return null;
+    }
+  };
 
   // Initialize or retrieve chat session
   const initializeChat = async () => {
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YzA0MWNiNjFkZmVkODhjZTU5NzcwNiIsImlhdCI6MTc1NzQ0MzIyNywiZXhwIjoxNzU4MDQ4MDI3fQ.9L_BDm20BjgHXG8yN2kj7ikH1sPZFi1q_zfe5ogLjwY';
+    const token = await getToken();
     if (!token) {
       console.error("Token not found");
       return;
@@ -65,22 +65,22 @@ const ChatbotPage: React.FC = () => {
 
   // Send message to backend
   const sendMessageToBackend = async (text: string) => {
-    if (!chatId) return;
-    const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YzA0MWNiNjFkZmVkODhjZTU5NzcwNiIsImlhdCI6MTc1NzQ0MzIyNywiZXhwIjoxNzU4MDQ4MDI3fQ.9L_BDm20BjgHXG8yN2kj7ikH1sPZFi1q_zfe5ogLjwY';
-    if (!token) return;
+  if (!chatId) return;
+  const token = await getToken();
+  if (!token) return;
 
-    try {
-      const response = await axios.post(
-        `${API_URL}/${chatId}/message`,
-        { message: text },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const newMessages = response.data.messages;
-      setMessages((prev) => [...prev, ...newMessages]);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  };
+  try {
+    const response = await axios.post(
+      `${API_URL}/${chatId}/message`,
+      { message: text },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const newMessages = response.data.messages;
+    setMessages(newMessages); // ✅ replace messages with backend's response
+  } catch (error) {
+    console.error("Failed to send message:", error);
+  }
+};
 
   // Add user message locally before sending
   const addUserMessage = (text: string) => {
