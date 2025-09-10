@@ -7,6 +7,8 @@ import {userRouter} from './routes/user.route.js'
 import activityRouter from './routes/activity.route.js'
 import dailyRouter from './routes/daily.route.js';
 import chatRoutes from './routes/chat.route.js'
+import communityRouter from './routes/community.routes.js'
+import scheduleRouter from './models/schedule.model.js';
 
 dotenv.config();
 
@@ -25,10 +27,12 @@ app.use('/api/status', (req, res) => {
     res.send('Server is up and running');
 })
 
-app.use('/api/auth',userRouter )
+app.use('/api/v1/auth',userRouter )
 app.use('/api/v1/activity', activityRouter)
 app.use("/api/v1/daily", dailyRouter)
-app.use('/api/chat', chatRoutes)
+app.use('/api/v1/chat', chatRoutes)
+app.use('/api/v1/community', communityRouter)
+app.use('/api/v1/schedule', scheduleRouter)
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

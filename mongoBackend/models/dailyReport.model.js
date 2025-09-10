@@ -1,9 +1,8 @@
-// models/dashboard/DailyReport.model.js
 import mongoose from "mongoose";
 
 const dailyReportSchema = new mongoose.Schema(
   {
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -27,34 +26,20 @@ const dailyReportSchema = new mongoose.Schema(
       type: Number,
       min: 1,
       max: 10,
-      required: function () {
-        return this.type === "end";
-      },
+      required: true,
     },
-    sleepHours: {
-      type: Number,
-      min: 0,
-      max: 24,
-      required: function () {
-        return this.type === "start";
-      },
+    notes: {
+      type: String,
+      trim: true,
     },
-    // connect activities to Activity model
     activities: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Activity",
       },
     ],
-    notes: {
-      type: String,
-      trim: true,
-    },
   },
   { timestamps: true }
 );
 
-export const dailyReport = mongoose.model(
-  "dailyReport",
-  dailyReportSchema
-);
+export const DailyReport = mongoose.model("DailyReport", dailyReportSchema);
