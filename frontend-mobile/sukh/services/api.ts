@@ -1,29 +1,36 @@
-export const TMDB_CONFIG = {
-  BASE_URL: "https://api.themoviedb.org/3",
-  API_KEY: process.env.EXPO_PUBLIC_MOVIE_API_KEY,
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+
+const API_BASE_URL =
+  Platform.OS === "android"
+    ? "http://10.0.2.2:5432/api"
+    : "http://10.0.13.68:5432/api";
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
   headers: {
-    accept: "application/json",
-    Authorization: `Bearer ${process.env.EXPO_PUBLIC_MOVIE_API_KEY}`,
+    "Content-Type": "application/json",
   },
-};
+});
 
-export const fetchMovies = async ({ query }: { query: string }) => {
-  const apiKey = process.env.EXPO_PUBLIC_MOVIE_API_KEY;
-  const endpoint = query
-    ? `${TMDB_CONFIG.BASE_URL}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`
-    : `${TMDB_CONFIG.BASE_URL}/discover/movie?api_key=${apiKey}&sort_by=popularity.desc`;
+// Request interceptor
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        if (config.headers) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        console.log("Attaching token:", token);
+      }
+    } catch (err) {
+      console.warn("Error fetching token:", err);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      accept: "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch movies");
-  }
-
-  const data = await response.json();
-  return data.results;
-};
+export default api

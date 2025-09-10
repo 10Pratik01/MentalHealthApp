@@ -1,20 +1,19 @@
 import BottomNavBar from '../../components/BottomNavBar';
 
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  KeyboardAvoidingView, 
-  Platform, 
-  Alert 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert
 } from "react-native";
 import { useRouter } from "expo-router";
-
-const API_BASE_URL = "http://10.0.13.68:5432/api/auth" 
- // iOS simulator
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import api from "../../services/api";
 
 const styles = StyleSheet.create({
   container: {
@@ -85,31 +84,28 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-          mobileNumber: phone || null,
-          dateOfBirth: dob || null, // must be YYYY-MM-DD
-        }),
+      const response = await api.post("/auth/register", {
+        name,
+        email,
+        password,
+        mobileNumber: phone || null,
+        dateOfBirth: dob || null, // must be YYYY-MM-DD
       });
 
-      const data = await response.json();
+      const data = response.data;
       setLoading(false);
 
-      if (response.ok) {
-        Alert.alert("Success", "Account created successfully!");
-        router.push("../"); // go to login page
-      } else {
-        Alert.alert("Error", data.message || "Something went wrong.");
-      }
-    } catch (error) {
+      Alert.alert("Success", "Account created successfully!");
+      router.push("../"); // go to login page
+    } catch (error: any) {
       setLoading(false);
-      console.error("Signup Error:", error);
-      Alert.alert("Error", "Unable to connect to server.");
+      let message = "Something went wrong.";
+      if (error.response?.data?.message) {
+        message = error.response.data.message;
+      } else if (error.message) {
+        message = error.message;
+      }
+      Alert.alert("Error", message);
     }
   };
 

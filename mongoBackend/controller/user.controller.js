@@ -1,7 +1,7 @@
 import { User } from "../models/user.model.js";
-import { asyncHandler } from "../utils/asyncHandler.js"; // Fixed typo: "uils" -> "utils"
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { asyncHandler } from "../utils/asyncHandler.js";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -17,7 +17,6 @@ export const registeruser = asyncHandler(async (req, res) => {
     throw new Error("Please fill all the required fields");
   }
 
-  // Check if user already exists
   const userExists = await User.findOne({ email: email.toLowerCase() });
 
   if (userExists) {
@@ -25,10 +24,8 @@ export const registeruser = asyncHandler(async (req, res) => {
     throw new Error("User already exists with this email");
   }
 
-  // Hash password before creating user
-  const hashedPassword = await bcrypt.hash(password, 12);
+  const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS) || 10);
 
-  // Create user with hashed password
   const user = await User.create({
     name: name.trim(),
     email: email.toLowerCase().trim(),
@@ -37,16 +34,7 @@ export const registeruser = asyncHandler(async (req, res) => {
     mobileNumber: mobileNumber || null,
   });
 
-  // Generate token
   const token = generateToken(user._id);
-
-  // Cookie options
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
 
   res.status(201).json({
     success: true,
@@ -58,22 +46,20 @@ export const registeruser = asyncHandler(async (req, res) => {
       riskLevel: user.riskLevel,
       dateOfBirth: user.dateOfBirth,
       mobileNumber: user.mobileNumber,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
     },
-    token // Include token in response for mobile apps
+    token, // Provide JWT token for client use
   });
 });
 
 export const loginuser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validate input
   if (!email || !password) {
     res.status(400);
     throw new Error("Please provide email and password");
   }
 
-  // Find user by email (include password for comparison)
   const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
 
   if (!user) {
@@ -81,13 +67,11 @@ export const loginuser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  // Check if user account is active
   if (!user.isActive) {
     res.status(401);
     throw new Error("Account has been deactivated. Please contact support.");
   }
 
-  // Validate password
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
@@ -95,22 +79,12 @@ export const loginuser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  // Generate token
   const token = generateToken(user._id);
 
-  // Cookie options
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
-  };
-
-  // Update last login (optional)
-  user.updatedAt = new Date();
+  user.lastLoginAt = new Date(); // Optional: track last login
   await user.save();
 
-  res.status(200).cookie("token", token, options).json({
+  res.status(200).json({
     success: true,
     message: "Login successful",
     user: {
@@ -121,25 +95,20 @@ export const loginuser = asyncHandler(async (req, res) => {
       dateOfBirth: user.dateOfBirth,
       mobileNumber: user.mobileNumber,
     },
-    token // Include token in response for mobile apps
+    token, // Provide token for client
   });
 });
 
-// Logout user
 export const logoutuser = asyncHandler(async (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  });
+  // If you set HTTP-only cookies for token, clear here
+  // But for JWT in headers, client removes token
 
   res.status(200).json({
     success: true,
-    message: "Logged out successfully"
+    message: "Logged out successfully",
   });
 });
 
-// Get user profile
 export const getUserProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id).select('-password');
 
@@ -159,15 +128,13 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       mobileNumber: user.mobileNumber,
       isActive: user.isActive,
       createdAt: user.createdAt,
-      updatedAt: user.updatedAt
-    }
+      updatedAt: user.updatedAt,
+    },
   });
 });
 
-// Update user profile
 export const updateUserProfile = asyncHandler(async (req, res) => {
   const { name, dateOfBirth, mobileNumber } = req.body;
-
   const user = await User.findById(req.user.id).select('-password');
 
   if (!user) {
@@ -175,7 +142,6 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // Update fields if provided
   if (name) user.name = name.trim();
   if (dateOfBirth) user.dateOfBirth = dateOfBirth;
   if (mobileNumber !== undefined) user.mobileNumber = mobileNumber;
@@ -192,11 +158,10 @@ export const updateUserProfile = asyncHandler(async (req, res) => {
       riskLevel: updatedUser.riskLevel,
       dateOfBirth: updatedUser.dateOfBirth,
       mobileNumber: updatedUser.mobileNumber,
-      updatedAt: updatedUser.updatedAt
-    }
+      updatedAt: updatedUser.updatedAt,
+    },
   });
 });
-
 
 export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -213,23 +178,18 @@ export const changePassword = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  // Verify current password
   const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-  
+
   if (!isCurrentPasswordValid) {
     res.status(400);
     throw new Error("Current password is incorrect");
   }
 
-  // Hash new password
-  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
-  user.password = hashedNewPassword;
+  user.password = await bcrypt.hash(newPassword, Number(process.env.SALT_ROUNDS) || 10);
   await user.save();
 
   res.status(200).json({
     success: true,
-    message: "Password changed successfully"
+    message: "Password changed successfully",
   });
 });
-
-

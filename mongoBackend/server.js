@@ -8,6 +8,8 @@ import activityRouter from './routes/activity.route.js'
 import dailyRouter from './routes/daily.route.js';
 import chatRoutes from './routes/chat.route.js'
 
+dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

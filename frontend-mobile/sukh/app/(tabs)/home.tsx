@@ -1,21 +1,24 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import BottomNavBar from "../../components/BottomNavBar";
-import { SafeAreaView, View, Text, ScrollView, Pressable, Image, StatusBar } from "react-native";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  Image,
+  StatusBar,
+} from "react-native";
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import api from "../../services/api";
 
-// NOTE: This screen uses NativeWind (Tailwind for RN). Ensure you've set up nativewind and the tailwind preset.
-// 1) npm i nativewind tailwindcss
-// 2) npx tailwindcss init -p
-// 3) Add the NativeWind preset in tailwind.config.js and include the RN paths.
-
-// Types
 export type MoodKey = "happy" | "calm" | "manic" | "angry";
 
 interface Mood {
   key: MoodKey;
   label: string;
-  icon: React.ReactNode; // ReactNode avoids the JSX.Element typing issue
+  icon: React.ReactNode;
 }
 
 const MOODS: Mood[] = [
@@ -65,7 +68,7 @@ const FeatureCard: React.FC<{
   cta?: string;
   onPress?: () => void;
   leftIcon?: React.ReactNode;
-  bg?: string; // solid background color fallback (no gradient dependency)
+  bg?: string;
 }> = ({ title, subtitle, cta, onPress, leftIcon, bg = "#1f2937" }) => (
   <Pressable onPress={onPress} className="rounded-2xl overflow-hidden">
     <View className="p-4" style={{ backgroundColor: bg }}>
@@ -105,9 +108,32 @@ const QuoteCard = () => (
   </View>
 );
 
+const API_USER_PROFILE = "http://10.0.13.68:5432/api/users/profile"; // Adjust as needed
 
 const HomeScreen: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null);
+  const [userName, setUserName] = React.useState<string>("");
+  const router = useRouter();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.get("/auth/getUser");
+        setUserName(response.data.user.name ?? "User");
+      } catch (err) {
+        console.error("Failed to fetch user", err);
+        setUserName("User");
+      }
+    };
+    fetchUser();
+  }, []);
 
   const moodChips = useMemo(
     () =>
@@ -129,8 +155,6 @@ const HomeScreen: React.FC = () => {
     [selectedMood]
   );
 
-  const router = useRouter();
-
   return (
     <SafeAreaView className="flex-1 bg-[#0b1116]">
       <StatusBar barStyle="light-content" />
@@ -138,12 +162,11 @@ const HomeScreen: React.FC = () => {
       <View className="px-5 pt-2 pb-4 flex-row items-center justify-between">
         <View className="flex-row items-center gap-3">
           <View className="w-9 h-9 rounded-full overflow-hidden">
-            {/* Replace with user's avatar */}
             <Image source={{ uri: "https://i.pravatar.cc/72?img=5" }} className="w-full h-full" />
           </View>
           <View>
-            <Text className="text-slate-300 text-xs">Good Afternoon,</Text>
-            <Text className="text-white text-xl font-semibold">Vibha</Text>
+            <Text className="text-slate-300 text-xs">{getGreeting()},</Text>
+            <Text className="text-white text-xl font-semibold">{userName}</Text>
           </View>
         </View>
         <View className="relative">
@@ -179,14 +202,14 @@ const HomeScreen: React.FC = () => {
             cta="Book Now"
             leftIcon={<MaterialCommunityIcons name="account-heart" size={28} color="#fff" />}
             bg="#10b981"
-            onPress={() => router.push("/session")} 
+            onPress={() => router.push("/session")}
           />
         </View>
 
         {/* Quick actions */}
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1">
-            <QuickAction label="Diary" icon={<Ionicons name="book" size={18} color="#fff" />}  onPress={() => router.push("/")} />
+            <QuickAction label="Diary" icon={<Ionicons name="book" size={18} color="#fff" />} onPress={() => router.push("/")} />
           </View>
           <View className="flex-1">
             <QuickAction label="Stories" icon={<Ionicons name="newspaper" size={18} color="#fff" onPress={() => router.push("/motivationalcontent")}  />} />
