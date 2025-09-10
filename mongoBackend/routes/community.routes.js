@@ -4,19 +4,18 @@ import { addCommentCount, createPost, getPosts, likePost } from "../controller/c
 
 const communityRouter = express.Router();
 
-// All routes require authentication
-communityRouter.use(protect);
+
 
 // Get all posts
-communityRouter.get("/getPost", getPosts);
+communityRouter.get("/getPost",protect, getPosts);
 
 // Create new post
-communityRouter.post("/createPost", createPost);
+communityRouter.post("/createPost",protect, createPost);
 
 // Like a post
-communityRouter.post("/:id/like", likePost);
+communityRouter.post("/:id/like",protect, likePost);
 
 // Increment comment count
-communityRouter.post("/:id/comment", addCommentCount);
+communityRouter.post("/:id/comment",protect, addCommentCount);
 
 export default communityRouter;

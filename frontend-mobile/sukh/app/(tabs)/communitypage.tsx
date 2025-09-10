@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import PostCard, { Post } from '../../components/PostCard';
 
-const API_BASE_URL = 'https://localhost:5432/api/v1/community'; // Replace with your backend URL
+const API_BASE_URL = 'http://localhost:5432/api/v1/community'; // Replace with your backend URL
 
 const CommunityPage: React.FC = () => {
 	const [posts, setPosts] = useState<Post[]>([]);
@@ -20,32 +20,38 @@ const CommunityPage: React.FC = () => {
 		});
 	};
 
-	// Fetch posts
-	const fetchPosts = useCallback(async () => {
-		try {
-			setLoading(true);
-			const api = await getAxiosInstance();
-			const res = await api.get('/getPost');
-			const data = res.data;
+// Fetch posts
+const fetchPosts = useCallback(async () => {
+	try {
+		setLoading(true);
+		const api = await getAxiosInstance();
+		const res = await api.get('/getPost');
 
-			const mappedPosts: Post[] = data.map((p: any) => ({
-				id: p._id,
-				authorName: p.anonymous ? 'Anonymous' : p.author.name,
-				content: p.content,
-				timestamp: new Date(p.createdAt).toLocaleString(),
-				likes: p.likes?.length || 0,
-				comments: p.comments?.length || 0,
-				anonymous: p.anonymous,
-			}));
+		console.log("Raw response:", res.data);
 
-			setPosts(mappedPosts);
-		} catch (err: any) {
-			console.error(err);
-			Alert.alert('Error', err.response?.data?.message || 'Failed to fetch posts');
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+		// ✅ Normalize data safely into an array
+		const rawPosts = res.data?.posts ?? res.data ?? [];
+		const postsArray = Array.isArray(rawPosts) ? rawPosts : [rawPosts];
+
+		const mappedPosts: Post[] = postsArray.map((p: any) => ({
+			id: p._id,
+			authorName: p.anonymous ? 'Anonymous' : p.author?.name || 'Unknown',
+			content: p.content,
+			timestamp: new Date(p.createdAt).toLocaleString(),
+			likes: p.likes?.length || 0,
+			comments: p.comments?.length || 0,
+			anonymous: p.anonymous,
+		}));
+
+		setPosts(mappedPosts);
+	} catch (err: any) {
+		console.error("Fetch posts error:", err);
+		Alert.alert('Error', err.response?.data?.message || 'Failed to fetch posts');
+	} finally {
+		setLoading(false);
+	}
+}, []);
+
 
 	useEffect(() => {
 		let mounted = true;
