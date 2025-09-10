@@ -8,7 +8,7 @@ const API_BASE_URL =
     : "http://10.0.13.68:5432/api";
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: "http://localhost:5432/api/v1",
   headers: {
     "Content-Type": "application/json",
   },

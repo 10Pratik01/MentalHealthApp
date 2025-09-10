@@ -5,25 +5,64 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import SliderComp from "@react-native-community/slider";
+import { useRouter } from "expo-router";
+import api from "../../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RoutineScreen() {
-  const [mood, setMood] = useState(5);
+  const [mood, setMood] = useState(5); // 1-10 slider
   const [feeling, setFeeling] = useState("");
+  const router = useRouter();
 
-  const { push } = require("expo-router").useRouter();
+  // Map 1-10 slider to backend mood 0-4
+  const mapMoodToBackend = (value: number) => {
+    return Math.round((value / 10) * 4);
+  };
+
+  const handleCheckIn = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "No token found. Please login again.");
+        return;
+      }
+
+      const moodBackend = mapMoodToBackend(mood);
+
+      const res = await api.post(
+        "/daily/daily-reports",
+        {
+          type: "start", // you can change to "test" during testing
+          name: "Morning Report",
+          mood: moodBackend,
+          notes: feeling,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Alert.alert("Success", "Morning report saved!");
+      router.push("../previos");
+    } catch (err: any) {
+      console.log(err.response?.data);
+      Alert.alert(
+        "Error",
+        err.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Title */}
       <Text style={styles.title}>Start Day Routine</Text>
-
-      {/* Greeting */}
       <Text style={styles.greeting}>Good morning USER</Text>
       <Text style={styles.subtext}>How are you feeling today?</Text>
 
-      {/* Mood Slider */}
       <View style={styles.sliderRow}>
         <Ionicons name="sad-outline" size={28} color="#fff" />
         <SliderComp
@@ -32,7 +71,7 @@ export default function RoutineScreen() {
           maximumValue={10}
           step={1}
           value={mood}
-          onValueChange={(val) => setMood(val)}
+          onValueChange={(val: number) => setMood(val)}
           minimumTrackTintColor="#00C897"
           maximumTrackTintColor="#444"
           thumbTintColor="#00C897"
@@ -41,7 +80,6 @@ export default function RoutineScreen() {
       </View>
       <Text style={styles.moodValue}>Mood: {mood}/10</Text>
 
-      {/* Text Input */}
       <TextInput
         style={styles.input}
         placeholder="I am feeling..."
@@ -51,8 +89,7 @@ export default function RoutineScreen() {
         multiline
       />
 
-      {/* Button */}
-      <TouchableOpacity style={styles.button} onPress={() => push("../endday")}> 
+      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
         <Text style={styles.buttonText}>Check in</Text>
       </TouchableOpacity>
     </View>

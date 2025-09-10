@@ -1,40 +1,76 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, SafeAreaView, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, SafeAreaView, Modal, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import PostCard, { Post } from '../../components/PostCard';
+
+const API_BASE_URL = 'https://localhost:5432/api/v1/community'; // Replace with your backend URL
 
 const CommunityPage: React.FC = () => {
 	const [posts, setPosts] = useState<Post[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [composeOpen, setComposeOpen] = useState(false);
 
-	const fetchPosts = useCallback(async (): Promise<Post[]> => {
-		// Replace with your API call
-		// const res = await fetch('https://your.api/posts'); return res.json();
-		return [
-			{ id: '1', authorName: 'Rakesh Sinha', content: 'I have problems at school and I am being bullied', timestamp: 'just now', likes: 2, comments: 0 },
-			{ id: '2', authorName: 'Rakesh Sinha', content: 'I have problems at school and I am being bullied', timestamp: 'just now', likes: 2, comments: 0 },
-			{ id: '3', authorName: 'Rakesh Sinha', content: 'I have problems at school and I am being bullied', timestamp: 'just now', likes: 2, comments: 0, anonymous: true },
-		];
+	// Axios instance with auth token
+	const getAxiosInstance = async () => {
+		const token = await AsyncStorage.getItem('token');
+		return axios.create({
+			baseURL: API_BASE_URL,
+			headers: { Authorization: `Bearer ${token}` },
+		});
+	};
+
+	// Fetch posts
+	const fetchPosts = useCallback(async () => {
+		try {
+			setLoading(true);
+			const api = await getAxiosInstance();
+			const res = await api.get('/getPost');
+			const data = res.data;
+
+			const mappedPosts: Post[] = data.map((p: any) => ({
+				id: p._id,
+				authorName: p.anonymous ? 'Anonymous' : p.author.name,
+				content: p.content,
+				timestamp: new Date(p.createdAt).toLocaleString(),
+				likes: p.likes?.length || 0,
+				comments: p.comments?.length || 0,
+				anonymous: p.anonymous,
+			}));
+
+			setPosts(mappedPosts);
+		} catch (err: any) {
+			console.error(err);
+			Alert.alert('Error', err.response?.data?.message || 'Failed to fetch posts');
+		} finally {
+			setLoading(false);
+		}
 	}, []);
 
 	useEffect(() => {
 		let mounted = true;
-		(async () => {
-			try {
-				setLoading(true);
-				const data = await fetchPosts();
-				if (mounted) setPosts(data);
-			} finally {
-				if (mounted) setLoading(false);
-			}
-		})();
+		if (mounted) fetchPosts();
 		return () => { mounted = false; };
 	}, [fetchPosts]);
 
-	const onCreatePostChoice = (anonymous: boolean) => {
+	// Create new post
+	const onCreatePostChoice = async (anonymous: boolean) => {
 		setComposeOpen(false);
-		// navigation.navigate('Compose', { anonymous });
-		console.log('Compose with anonymous =', anonymous);
+
+		const content = prompt('Enter your post content');
+		if (!content) return;
+
+		try {
+			const api = await getAxiosInstance();
+			const res = await api.post('/createPost', { content, anonymous });
+			if (res.status === 201) {
+				Alert.alert('Success', 'Post created successfully');
+				fetchPosts(); // Refresh posts
+			}
+		} catch (err: any) {
+			console.error(err);
+			Alert.alert('Error', err.response?.data?.message || 'Failed to create post');
+		}
 	};
 
 	const unreadCount = 3;
@@ -43,13 +79,9 @@ const CommunityPage: React.FC = () => {
 		<SafeAreaView style={styles.container}>
 			{/* Header */}
 			<View style={styles.header}>
-				<TouchableOpacity style={styles.avatarBtn} onPress={() => {}}>
-					<Text style={styles.avatarLabel}>You</Text>
-				</TouchableOpacity>
-
+				<TouchableOpacity style={styles.avatarBtn}><Text style={styles.avatarLabel}>You</Text></TouchableOpacity>
 				<Text style={styles.title}>Community</Text>
-
-				<TouchableOpacity style={styles.bellBtn} onPress={() => {}}>
+				<TouchableOpacity style={styles.bellBtn}>
 					<Text style={styles.bellIcon}>🔔</Text>
 					{unreadCount > 0 && (
 						<View style={styles.badge}>
@@ -63,9 +95,7 @@ const CommunityPage: React.FC = () => {
 			<View style={styles.subHeader}>
 				<Text style={styles.chip}>Trending</Text>
 				<View style={{ flex: 1 }} />
-				<TouchableOpacity style={styles.filterBtn} onPress={() => {}}>
-					<Text style={{ color: 'rgba(255,255,255,0.8)' }}>⚙️</Text>
-				</TouchableOpacity>
+				<TouchableOpacity style={styles.filterBtn}><Text style={{ color: 'rgba(255,255,255,0.8)' }}>⚙️</Text></TouchableOpacity>
 			</View>
 
 			{/* Feed */}
@@ -128,44 +158,29 @@ const CommunityPage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+	// Keep all the same styles as before
 	container: { flex: 1, backgroundColor: '#0f1017' },
 	header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 10, flexDirection: 'row', alignItems: 'center' },
-	avatarBtn: {
-		height: 36, width: 36, borderRadius: 18, backgroundColor: '#4b5563', alignItems: 'center', justifyContent: 'center',
-		borderWidth: 2, borderColor: 'rgba(255,255,255,0.12)',
-	},
+	avatarBtn: { height: 36, width: 36, borderRadius: 18, backgroundColor: '#4b5563', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.12)' },
 	avatarLabel: { color: 'white', fontSize: 12 },
 	title: { flex: 1, textAlign: 'center', color: 'white', fontSize: 18, fontWeight: '600' },
 	bellBtn: { height: 36, width: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', position: 'relative' },
 	bellIcon: { color: 'white', fontSize: 18 },
-	badge: {
-		position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8,
-		backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2,
-	},
+	badge: { position: 'absolute', top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2 },
 	badgeTxt: { color: '#0f1017', fontSize: 10, fontWeight: '700' },
-
 	subHeader: { paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
 	chip: { color: '#86efac', backgroundColor: 'rgba(16,185,129,0.18)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, fontSize: 12, fontWeight: '600' },
 	filterBtn: { height: 28, width: 28, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)' },
-
 	feed: { flex: 1, paddingHorizontal: 12, paddingTop: 6 },
 	loading: { color: 'rgba(255,255,255,0.7)', paddingHorizontal: 4, paddingTop: 8 },
-
-	fab: {
-		position: 'absolute', right: 16, bottom: 28, height: 56, width: 56, borderRadius: 28,
-		backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center',
-		shadowColor: '#34d399', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 8,
-	},
+	fab: { position: 'absolute', right: 16, bottom: 28, height: 56, width: 56, borderRadius: 28, backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center', shadowColor: '#34d399', shadowOpacity: 0.4, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
 	fabPlus: { color: '#0f1017', fontSize: 30, fontWeight: '700', marginTop: -1 },
-
 	modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
 	modalCard: { backgroundColor: '#161825', padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
 	modalHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 	modalTitle: { color: 'white', fontSize: 16, fontWeight: '600' },
 	closeBtn: { height: 28, width: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
 	modalSub: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginTop: 4 },
-
-	// removed unsupported "gap" to avoid TS errors; spacing handled per-item
 	modalChoices: { marginTop: 14 },
 	choice: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderRadius: 12, padding: 12 },
 	choiceEmoji: { fontSize: 20, marginRight: 10 },

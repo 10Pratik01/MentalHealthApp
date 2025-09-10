@@ -1,40 +1,37 @@
-import { Router } from 'express';
-import { protect } from '../middleware/auth.js';
-import { createDailyReport, deleteDailyReport, getActivitiesSortedByMood, getDailyReportById, getDailyReports, getDailyReportsWithAggregation, getMoodTrends, getTodaysReports, getWeeklySummary, updateDailyReport } from '../controller/dailyReport.controller.js';
+import { Router } from "express";
+import { protect } from "../middleware/auth.js";
+import {
+  createDailyReport,
+  deleteDailyReport,
+  getActivitiesSortedByMood,
+  getDailyReportById,
+  getDailyReports,
+  getTodaysReports,
+  getWeeklySummary,
+  updateDailyReport,
+} from "../controller/dailyReport.controller.js";
 
 const dailyRouter = Router();
-
-// Apply authentication middleware to all routes
 dailyRouter.use(protect);
 
-// Main daily reports routes
-dailyRouter.route('/')
+// Create / fetch all
+dailyRouter.route("/daily-reports")
   .post(createDailyReport)
   .get(getDailyReports);
 
-// Alternative aggregation-based endpoint
-dailyRouter.route('/aggregated')
-  .get(getDailyReportsWithAggregation);
+// Today’s reports
+dailyRouter.get("/today", getTodaysReports);
 
-// Today's reports
-dailyRouter.route('/today')
-  .get(getTodaysReports);
+// Weekly analytics
+dailyRouter.get("/analytics/weekly", getWeeklySummary);
 
-// Analytics routes
-dailyRouter.route('/analytics/weekly')
-  .get(getWeeklySummary);
-
-dailyRouter.route('/analytics/mood-trends')
-  .get(getMoodTrends);
-
-// Individual report operations
-dailyRouter.route('/:id')
+// Report by ID
+dailyRouter.route("/:id")
   .get(getDailyReportById)
   .put(updateDailyReport)
   .delete(deleteDailyReport);
 
-// Get activities sorted by mood for a specific report
-dailyRouter.route('/:id/activities-sorted')
-  .get(getActivitiesSortedByMood);
+// Sorted activities
+dailyRouter.get("/:id/activities-sorted", getActivitiesSortedByMood);
 
 export default dailyRouter;

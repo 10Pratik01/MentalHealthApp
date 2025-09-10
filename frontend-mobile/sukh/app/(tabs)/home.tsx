@@ -202,7 +202,7 @@ const HomeScreen: React.FC = () => {
             cta="Book Now"
             leftIcon={<MaterialCommunityIcons name="account-heart" size={28} color="#fff" />}
             bg="#10b981"
-            onPress={() => router.push("/session")}
+            onPress={() => router.push("/schedule")}
           />
         </View>
 
@@ -228,6 +228,7 @@ const HomeScreen: React.FC = () => {
             cta="Start Now"
             leftIcon={<MaterialCommunityIcons name="chart-timeline-variant" size={28} color="#fff" />}
             bg="#10b981"
+            onPress={() => router.push("/startday")}
           />
         </View>
       </ScrollView>

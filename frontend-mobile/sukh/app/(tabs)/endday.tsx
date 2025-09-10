@@ -1,48 +1,83 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { useRouter } from "expo-router";
+import api from "../../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function EndDayScreen() {
   const [selectedMood, setSelectedMood] = useState("");
   const [reflection, setReflection] = useState("");
   const moodOptions = ["Bad", "Not Great", "Okay", "Good", "Great"];
+  const router = useRouter();
 
-  const { push } = require("expo-router").useRouter();
+  const handleSubmit = async () => {
+    if (!selectedMood) {
+      Alert.alert("Error", "Please select a mood");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const res = await api.post(
+        "/daily/daily-reports",
+        {
+          type: "end",
+          name: "Evening Report",
+          mood: moodOptions.indexOf(selectedMood) + 1, // map mood option → number
+          notes: reflection,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      Alert.alert("Success", "Evening report saved!");
+      router.push("../home");
+    } catch (err: any) {
+      Alert.alert(
+        "Error",
+        err.response?.data?.message || "Something went wrong"
+      );
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>End Day Routine</Text>
 
-      {/* Day Review */}
       <View style={styles.section}>
         <Text style={styles.heading}>How was your day?</Text>
-        <View style={styles.moodOptionsRow}> 
+        <View style={styles.moodOptionsRow}>
           {moodOptions.map((mood) => (
             <TouchableOpacity
               key={mood}
-              style={[styles.moodButton, selectedMood === mood && styles.moodButtonSelected]}
+              style={[
+                styles.moodButton,
+                selectedMood === mood && styles.moodButtonSelected,
+              ]}
               onPress={() => setSelectedMood(mood)}
             >
-              <Text style={[styles.moodButtonText, selectedMood === mood && styles.moodButtonTextSelected]}>{mood}</Text>
+              <Text
+                style={[
+                  styles.moodButtonText,
+                  selectedMood === mood && styles.moodButtonTextSelected,
+                ]}
+              >
+                {mood}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      {/* Mood Comparison */}
-      <View style={styles.section}>
-        <Text style={styles.heading}>Mood Comparison</Text>
-        <View style={styles.comparisonRow}>
-          <View style={styles.comparisonCard}>
-            <Text style={styles.comparisonLabel}>Morning Mood</Text>
-            <Text style={styles.comparisonValue}>Good</Text>
-          </View>
-          <View style={styles.comparisonCard}>
-            <Text style={styles.comparisonLabel}>Current Mood</Text>
-            <Text style={styles.comparisonValue}>{selectedMood || "-"}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Reflection */}
       <View style={styles.section}>
         <Text style={styles.heading}>Reflection</Text>
         <TextInput
@@ -55,8 +90,15 @@ export default function EndDayScreen() {
         />
       </View>
 
-      {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton} onPress={() => push("../home")}> 
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={async () => {
+          await handleSubmit(); // call the existing function
+          // Navigate to previos.tsx after successful submission
+          // Use replace so user cannot go back to EndDayScreen
+          router.replace("/previos");
+        }}
+      >
         <Text style={styles.submitButtonText}>Submit Evening Check-In</Text>
       </TouchableOpacity>
     </ScrollView>
