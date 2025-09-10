@@ -96,7 +96,7 @@ export default function Signup() {
       setLoading(false);
 
       Alert.alert("Success", "Account created successfully!");
-      router.push("../"); // go to login page
+      router.push("/phq9"); // go to login page
     } catch (error: any) {
       setLoading(false);
       let message = "Something went wrong.";

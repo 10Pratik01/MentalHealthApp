@@ -21,7 +21,7 @@ export default function ScheduleScreen() {
   const timeslots = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "3:00 PM", "4:00 PM"];
 
   const api = axios.create({
-    baseURL: "http://localhost:8081/api/v1", // <-- set your backend base URL here
+    baseURL: "http://localhost:5432/api/v1", // <-- set your backend base URL here
   });
 
   // Fetch booked appointments for the selected date
@@ -30,7 +30,7 @@ export default function ScheduleScreen() {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
-      const res = await api.get("/schedule", {
+      const res = await api.get("/schedule/get", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -66,7 +66,7 @@ export default function ScheduleScreen() {
       if (!token) throw new Error("Not authenticated");
 
       await api.post(
-        "/schedule",
+        "/schedule/create",
         { date: selectedDate, time: selectedTime },
         { headers: { Authorization: `Bearer ${token}` } }
       );

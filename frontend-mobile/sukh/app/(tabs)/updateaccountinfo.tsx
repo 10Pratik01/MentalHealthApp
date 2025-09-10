@@ -26,7 +26,7 @@ const EditProfilePage: React.FC = () => {
       try {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
-          router.replace("/login");
+          router.replace("/");
           return;
         }
 

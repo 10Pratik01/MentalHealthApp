@@ -31,8 +31,8 @@ const userSchema = new mongoose.Schema({
   },
   riskLevel: { 
     type: String, 
-    enum: ['high', 'mid', 'low'], 
-    default: 'low' 
+    enum: ['none', 'mild', 'moderate', 'moderately severe', 'severe'], 
+    default: 'none' 
   },
   mobileNumber: {
     type: String, // Changed from Number to String

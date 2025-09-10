@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from "react";
 import BottomNavBar from "../../components/BottomNavBar";
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import styles from "./sessionStyles";
-import SessionCard from "../../components/SessionCard";
 
 interface SessionType {
   _id: string;
-  name: string;
-  title: string;
-  date: string;
   time: string;
   status: "upcoming" | "completed";
 }
 
 export default function Session() {
   const [tab, setTab] = useState<"upcoming" | "completed">("upcoming");
-  const [sessions, setSessions] = useState<any[]>([]); // default empty array
+  const [sessions, setSessions] = useState<SessionType[]>([]);
 
   // Fetch sessions from backend
   const fetchSessions = async () => {
@@ -26,7 +22,7 @@ export default function Session() {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Not authenticated");
 
-      const res = await axios.get("http://localhost:8081/api/v1/schedule/", {
+      const res = await axios.get("http://localhost:5432/api/v1/schedule/get", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -44,8 +40,20 @@ export default function Session() {
   // Filter sessions based on tab
   const filteredSessions = sessions.filter((session) => session.status === tab);
 
+  // Single session card component (inline)
+  const SessionCard = ({ time }: { time: string }) => (
+    <View style={cardStyles.card}>
+      <Text style={cardStyles.time}>{time}</Text>
+      <TouchableOpacity style={cardStyles.button}>
+        <Text style={cardStyles.buttonText}>
+          {tab === "upcoming" ? "Details" : "View Details"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: "#0B1B13" }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -66,37 +74,21 @@ export default function Session() {
             style={[styles.tab, tab === "upcoming" && styles.activeTab]}
             onPress={() => setTab("upcoming")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                tab === "upcoming" && styles.activeTabText,
-              ]}
-            >
-              Upcoming Sessions
+            <Text style={[styles.tabText, tab === "upcoming" && styles.activeTabText]}>
+              Upcoming
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, tab === "completed" && styles.activeTab]}
             onPress={() => setTab("completed")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                tab === "completed" && styles.activeTabText,
-              ]}
-            >
-              Completed Sessions
+            <Text style={[styles.tabText, tab === "completed" && styles.activeTabText]}>
+              Completed
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* All Sessions Header */}
-        <View style={styles.allSessionsHeader}>
-          <Text style={styles.allSessionsText}>All Sessions</Text>
-          <Ionicons name="chevron-down" size={18} color="#fff" />
-        </View>
-
-        {/* Session Cards */}
+        {/* Sessions List */}
         <ScrollView contentContainerStyle={styles.cardsWrapper}>
           {filteredSessions.length === 0 ? (
             <Text style={{ color: "#fff", textAlign: "center", marginTop: 20 }}>
@@ -104,18 +96,7 @@ export default function Session() {
             </Text>
           ) : (
             filteredSessions.map((session) => (
-              <SessionCard
-                key={session._id}
-                name={session.name}
-                title={session.title}
-                date={session.date}
-                time={session.time}
-                primaryAction={tab === "upcoming" ? "Reschedule" : "Re-book"}
-                secondaryAction={
-                  tab === "upcoming" ? "Join Now" : "View Profile"
-                }
-                highlighted={tab === "completed"}
-              />
+              <SessionCard key={session._id} time={session.time} />
             ))
           )}
         </ScrollView>
@@ -124,3 +105,35 @@ export default function Session() {
     </View>
   );
 }
+
+const cardStyles = StyleSheet.create({
+  card: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#1E1E2D",
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  time: {
+    color: "#00C897",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  button: {
+    backgroundColor: "#00C897",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: "#000",
+    fontWeight: "bold",
+  },
+});
