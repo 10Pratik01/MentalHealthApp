@@ -230,16 +230,6 @@ const HomeScreen: React.FC = () => {
             bg="#10b981"
           />
         </View>
-        <View className="mt-4">
-          <FeatureCard
-            title="Daily Plan"
-            subtitle="Start Day Report → Personalized Activities → End Day Report"
-            cta="Start Now"
-            leftIcon={<MaterialCommunityIcons name="chart-timeline-variant" size={28} color="#fff" />}
-            bg="#10b981"
-            onPress={()=>router.push('/phq9')}
-          />
-        </View>
       </ScrollView>
 
       <BottomNavBar />
