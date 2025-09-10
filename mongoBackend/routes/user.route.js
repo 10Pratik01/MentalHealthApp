@@ -1,6 +1,6 @@
 import { Router } from "express" 
 import { protect } from "../middleware/auth.js"
-import { changePassword, getUserProfile, loginuser, logoutuser, registeruser, updateUserProfile } from "../controller/user.controller.js"
+import { changePassword, getUserProfile, loginuser, logoutuser, registeruser, updateUserProfile, updateUserRiskLevel } from "../controller/user.controller.js"
 
 const userRouter = Router()
 
@@ -10,6 +10,7 @@ userRouter.route('/logout').post(logoutuser)
 userRouter.route('/updateprofile').post(protect ,updateUserProfile)
 userRouter.route('/getUser').get(protect, getUserProfile)
 userRouter.route('/changepassword').post(protect, changePassword)
+userRouter.put("/user/:id/risk-level", protect, updateUserRiskLevel)
 
 
 export {userRouter}

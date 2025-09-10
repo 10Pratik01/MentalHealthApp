@@ -193,3 +193,43 @@ export const changePassword = asyncHandler(async (req, res) => {
     message: "Password changed successfully",
   });
 });
+
+const labelToRiskLevel = {
+  "None": "none",
+  "Mild": "mild",
+  "Moderate": "moderate",
+  "Moderately Severe": "moderately severe",
+  "Severe": "severe",
+};
+
+export const updateUserRiskLevel = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { label } = req.body; // Expecting { label: "Moderate" }
+
+    if (!label) {
+      return res.status(400).json({ success: false, error: "Label is required" });
+    }
+
+    // Convert incoming label to enum value
+    const riskLevel = labelToRiskLevel[label];
+    if (!riskLevel) {
+      return res.status(400).json({ success: false, error: "Invalid label provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { riskLevel },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    return res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Error updating user risk level:", error.message);
+    return res.status(500).json({ success: false, error: "Server error" });
+  }
+};
