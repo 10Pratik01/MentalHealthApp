@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import BottomNavBar from '../../components/BottomNavBar';
+import BottomNavBar from "../../components/BottomNavBar";
 import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,7 +18,7 @@ interface SessionType {
 
 export default function Session() {
   const [tab, setTab] = useState<"upcoming" | "completed">("upcoming");
-  const [sessions, setSessions] = useState<SessionType[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]); // default empty array
 
   // Fetch sessions from backend
   const fetchSessions = async () => {
@@ -26,7 +26,7 @@ export default function Session() {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Not authenticated");
 
-      const res = await axios.get("/schedule/", {
+      const res = await axios.get("http://localhost:8081/api/v1/schedule/", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -42,7 +42,7 @@ export default function Session() {
   }, []);
 
   // Filter sessions based on tab
-  const filteredSessions = sessions.filter(session => session.status === tab);
+  const filteredSessions = sessions.filter((session) => session.status === tab);
 
   return (
     <View style={{ flex: 1 }}>
@@ -53,7 +53,9 @@ export default function Session() {
           <View style={styles.notificationWrapper}>
             <Ionicons name="notifications-outline" size={24} color="#fff" />
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{sessions.filter(s => s.status === "upcoming").length}</Text>
+              <Text style={styles.badgeText}>
+                {sessions.filter((s) => s.status === "upcoming").length}
+              </Text>
             </View>
           </View>
         </View>
@@ -65,7 +67,10 @@ export default function Session() {
             onPress={() => setTab("upcoming")}
           >
             <Text
-              style={[styles.tabText, tab === "upcoming" && styles.activeTabText]}
+              style={[
+                styles.tabText,
+                tab === "upcoming" && styles.activeTabText,
+              ]}
             >
               Upcoming Sessions
             </Text>
@@ -75,7 +80,10 @@ export default function Session() {
             onPress={() => setTab("completed")}
           >
             <Text
-              style={[styles.tabText, tab === "completed" && styles.activeTabText]}
+              style={[
+                styles.tabText,
+                tab === "completed" && styles.activeTabText,
+              ]}
             >
               Completed Sessions
             </Text>
@@ -95,7 +103,7 @@ export default function Session() {
               No sessions found.
             </Text>
           ) : (
-            filteredSessions.map(session => (
+            filteredSessions.map((session) => (
               <SessionCard
                 key={session._id}
                 name={session.name}
@@ -103,7 +111,9 @@ export default function Session() {
                 date={session.date}
                 time={session.time}
                 primaryAction={tab === "upcoming" ? "Reschedule" : "Re-book"}
-                secondaryAction={tab === "upcoming" ? "Join Now" : "View Profile"}
+                secondaryAction={
+                  tab === "upcoming" ? "Join Now" : "View Profile"
+                }
                 highlighted={tab === "completed"}
               />
             ))

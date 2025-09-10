@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { Calendar } from "react-native-calendars";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -13,17 +20,20 @@ export default function ScheduleScreen() {
 
   const timeslots = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "3:00 PM", "4:00 PM"];
 
+  const api = axios.create({
+    baseURL: "http://localhost:8081/api/v1", // <-- set your backend base URL here
+  });
+
   // Fetch booked appointments for the selected date
   const fetchBookedTimes = async (date: string) => {
     try {
       const token = await AsyncStorage.getItem("token");
       if (!token) return;
 
-      const res = await axios.get("/schedules/", {
+      const res = await api.get("/schedule", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Filter appointments by selected date
       const booked = res.data
         .filter((appt: any) => appt.date === date)
         .map((appt: any) => appt.time);
@@ -55,14 +65,14 @@ export default function ScheduleScreen() {
       const token = await AsyncStorage.getItem("token");
       if (!token) throw new Error("Not authenticated");
 
-      await axios.post(
-        "/schedules/",
+      await api.post(
+        "/schedule",
         { date: selectedDate, time: selectedTime },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       Alert.alert("Success", "Appointment booked successfully!");
-      router.push("../session"); // Navigate after booking
+      router.push("../session");
     } catch (err: any) {
       Alert.alert("Error", err.response?.data?.message || "Something went wrong");
       console.log(err);
@@ -70,8 +80,7 @@ export default function ScheduleScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Title */}
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
       <Text style={styles.title}>Book Session</Text>
 
       {/* Calendar */}
@@ -90,9 +99,8 @@ export default function ScheduleScreen() {
         style={styles.calendar}
       />
 
-      {/* Available Times */}
       <Text style={styles.subheading}>Available Times</Text>
-      <ScrollView contentContainerStyle={styles.timeslotContainer}>
+      <View style={styles.timeslotContainer}>
         {timeslots.map((time) => {
           const isBooked = bookedTimes.includes(time);
           const isSelected = selectedTime === time;
@@ -120,13 +128,12 @@ export default function ScheduleScreen() {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
 
-      {/* Book Appointment Button */}
       <TouchableOpacity style={styles.bookButton} onPress={handleBookAppointment}>
         <Text style={styles.bookButtonText}>Book Appointment</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 

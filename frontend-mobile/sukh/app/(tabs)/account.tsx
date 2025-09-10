@@ -20,33 +20,23 @@ const ProfilePage: React.FC = () => {
   const [weeklyAverage, setWeeklyAverage] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch user info and weekly average from backend
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
-          router.replace("/login");
+          router.replace("/");
           return;
         }
 
-        // Get user info
-        const userRes = await api.get(
-          "/auth/getUser",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setUserName(userRes.data.name);
+        // Fetch user info
+        const userRes = await api.get("/auth/getUser");
+        setUserName(userRes.data.user.name);
 
-        // Get weekly average
-        const avgRes = await api.get("/community/analytics/weekly", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setWeeklyAverage(avgRes.data.weeklyAverage); // assuming backend returns { weeklyAverage: number }
-      } catch (err) {
+        
+      } catch (err: any) {
         console.log(err);
-        Alert.alert("Error", "Failed to fetch user data");
+        Alert.alert("Error", err.response?.data?.message || "Failed to fetch user data");
       } finally {
         setLoading(false);
       }
@@ -63,15 +53,22 @@ const ProfilePage: React.FC = () => {
     router.push("/previos");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert("Log Out", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Log Out",
         style: "destructive",
         onPress: async () => {
-          await AsyncStorage.clear();
-          router.replace("/login");
+          try {
+            // Optional: call backend logout route
+            await api.post("/auth/logout");
+          } catch (err) {
+            console.log("Logout error:", err);
+          } finally {
+            await AsyncStorage.clear();
+            router.replace("/");
+          }
         },
       },
     ]);

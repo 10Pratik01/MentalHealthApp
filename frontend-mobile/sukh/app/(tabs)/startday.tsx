@@ -14,19 +14,31 @@ import api from "../../services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function RoutineScreen() {
-  const [mood, setMood] = useState(5);
+  const [mood, setMood] = useState(5); // 1-10 slider
   const [feeling, setFeeling] = useState("");
   const router = useRouter();
+
+  // Map 1-10 slider to backend mood 0-4
+  const mapMoodToBackend = (value: number) => {
+    return Math.round((value / 10) * 4);
+  };
 
   const handleCheckIn = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Error", "No token found. Please login again.");
+        return;
+      }
+
+      const moodBackend = mapMoodToBackend(mood);
+
       const res = await api.post(
-        "/daily-reports",
+        "/daily/daily-reports",
         {
-          type: "start",
+          type: "start", // you can change to "test" during testing
           name: "Morning Report",
-          mood,
+          mood: moodBackend,
           notes: feeling,
         },
         {
@@ -35,8 +47,9 @@ export default function RoutineScreen() {
       );
 
       Alert.alert("Success", "Morning report saved!");
-      router.push("../endday");
+      router.push("../previos");
     } catch (err: any) {
+      console.log(err.response?.data);
       Alert.alert(
         "Error",
         err.response?.data?.message || "Something went wrong"
@@ -76,14 +89,7 @@ export default function RoutineScreen() {
         multiline
       />
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={async () => {
-          await handleCheckIn(); // call the existing API submission
-          // Navigate to endday.tsx
-          router.push("/endday");
-        }}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleCheckIn}>
         <Text style={styles.buttonText}>Check in</Text>
       </TouchableOpacity>
     </View>

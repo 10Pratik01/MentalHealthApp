@@ -25,7 +25,7 @@ const CommunityPage: React.FC = () => {
 		try {
 			setLoading(true);
 			const api = await getAxiosInstance();
-			const res = await api.get('community/getPost');
+			const res = await api.get('/getPost');
 			const data = res.data;
 
 			const mappedPosts: Post[] = data.map((p: any) => ({
@@ -62,7 +62,7 @@ const CommunityPage: React.FC = () => {
 
 		try {
 			const api = await getAxiosInstance();
-			const res = await api.post('/community/createPost', { content, anonymous });
+			const res = await api.post('/createPost', { content, anonymous });
 			if (res.status === 201) {
 				Alert.alert('Success', 'Post created successfully');
 				fetchPosts(); // Refresh posts
